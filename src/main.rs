@@ -15,6 +15,7 @@ mod logging;
 mod monitor;
 mod providers;
 mod tui;
+mod types;
 
 #[tokio::main]
 async fn main() -> Result<()> {

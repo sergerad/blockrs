@@ -1,6 +1,7 @@
 use std::time::Duration;
 
-use crate::providers::{Account, Block, ChainProvider, Transaction};
+use crate::providers::ChainProvider;
+use crate::types::{Account, Block, Transaction};
 use tokio::{
     sync::mpsc::{unbounded_channel, UnboundedReceiver as Receiver, UnboundedSender as Sender},
     time::interval,
@@ -49,14 +50,17 @@ impl<P> ChainMonitor<P> {
 impl<P: ChainProvider + Sync> ChainMonitor<P> {
     pub async fn run(&mut self) {
         let mut tick_interval = interval(Duration::from_secs(2));
+        let head_number = 0u64;
         loop {
             tick_interval.tick().await;
             let block = self.provider.head().await.unwrap();
-            self.block_tx.send(block).unwrap();
-            let txs = self.provider.transactions().await.unwrap();
-            txs.into_iter().for_each(|tx| {
-                self.transaction_tx.send(tx).unwrap();
-            });
+            if block.number > head_number {
+                self.block_tx.send(block).unwrap();
+                let txs = self.provider.transactions().await.unwrap();
+                txs.into_iter().for_each(|tx| {
+                    self.transaction_tx.send(tx).unwrap();
+                });
+            }
         }
     }
 }

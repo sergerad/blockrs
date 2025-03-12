@@ -1,7 +1,8 @@
 use crate::providers::{Account, Block, ChainProvider, Transaction};
+use alloy::consensus::Transaction as AlloyTransaction;
 use alloy::eips::BlockId;
 use alloy::providers::{DynProvider, Provider, ProviderBuilder};
-use alloy::rpc::types::{Block as AlloyBlock, Transaction as AlloyTransaction};
+use alloy::rpc::types::Block as AlloyBlock;
 use alloy::transports::{RpcError, TransportErrorKind};
 use url::Url;
 
@@ -57,7 +58,15 @@ impl ChainProvider for EthProvider {
                 .unwrap()
                 .iter()
                 .map(|tx| Transaction {
-                    hash: tx.block_hash.unwrap(),
+                    value: tx.inner.value().to_string(),
+                    block_number: tx.block_number.unwrap(),
+                    hash: tx.inner.tx_hash().to_string(),
+                    from: tx.inner.signer().to_string(),
+                    to: tx
+                        .inner
+                        .to()
+                        .map(|addr| addr.to_string())
+                        .unwrap_or_default(),
                 })
                 .collect();
             Ok(txs)

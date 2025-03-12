@@ -5,11 +5,7 @@ use ratatui::{prelude::*, widgets::*};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
 use super::Component;
-use crate::{
-    action::Action,
-    config::Config,
-    providers::{Block, Transaction},
-};
+use crate::{action::Action, config::Config, types::Transaction};
 
 #[derive(Default)]
 pub struct TxList {
@@ -44,6 +40,9 @@ impl Component for TxList {
             Action::Tick => {
                 while let Ok(block) = self.transaction_rx.as_mut().unwrap().try_recv() {
                     self.transactions.push_back(block);
+                    if self.transactions.len() > 30 {
+                        self.transactions.pop_front();
+                    }
                 }
             }
             Action::Render => {
@@ -55,18 +54,11 @@ impl Component for TxList {
     }
 
     fn draw(&mut self, frame: &mut Frame, area: Rect) -> Result<()> {
-        let vertical = Layout::vertical([
-            Constraint::Length(1),
-            Constraint::Length(3),
-            Constraint::Min(1),
-        ]);
-        let [_, _, area] = vertical.areas(frame.area());
         let messages: Vec<ListItem> = self
             .transactions
             .iter()
-            .enumerate()
-            .map(|(i, tx)| {
-                let content = Line::from(Span::raw(format!("{i}: {}", tx.hash)));
+            .map(|tx| {
+                let content = Line::from(Span::raw(tx.to_string()));
                 ListItem::new(content)
             })
             .collect();

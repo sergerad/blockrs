@@ -1,6 +1,9 @@
 use color_eyre::Result;
 use crossterm::event::KeyEvent;
-use ratatui::prelude::Rect;
+use ratatui::{
+    layout::{Constraint, Layout},
+    prelude::Rect,
+};
 use serde::{Deserialize, Serialize};
 use tokio::sync::mpsc;
 use tracing::{debug, info};
@@ -44,8 +47,8 @@ impl<P: ChainProvider + Send + Sync + 'static> App<P> {
             frame_rate,
             components: vec![
                 Box::new(Head::new(block_rx)),
-                Box::new(TxList::new(transaction_rx)),
                 Box::new(FpsCounter::default()),
+                Box::new(TxList::new(transaction_rx)),
             ],
             should_quit: false,
             should_suspend: false,
@@ -178,8 +181,14 @@ impl<P: ChainProvider + Send + Sync + 'static> App<P> {
 
     fn render(&mut self, tui: &mut Tui) -> Result<()> {
         tui.draw(|frame| {
-            for component in self.components.iter_mut() {
-                if let Err(err) = component.draw(frame, frame.area()) {
+            let vertical = Layout::vertical([
+                Constraint::Length(1),
+                Constraint::Length(3),
+                Constraint::Min(1),
+            ]);
+            let areas: [Rect; 3] = vertical.areas(frame.area());
+            for (i, component) in self.components.iter_mut().enumerate() {
+                if let Err(err) = component.draw(frame, areas[i]) {
                     let _ = self
                         .action_tx
                         .send(Action::Error(format!("Failed to draw: {:?}", err)));
