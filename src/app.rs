@@ -7,12 +7,14 @@ use tracing::{debug, info};
 
 use crate::{
     action::Action,
-    components::{fps::FpsCounter, home::Home, Component},
+    components::{fps::FpsCounter, head::Head, Component},
     config::Config,
+    monitor::ChainMonitor,
+    providers::ChainProvider,
     tui::{Event, Tui},
 };
 
-pub struct App {
+pub struct App<P> {
     config: Config,
     tick_rate: f64,
     frame_rate: f64,
@@ -23,6 +25,7 @@ pub struct App {
     last_tick_key_events: Vec<KeyEvent>,
     action_tx: mpsc::UnboundedSender<Action>,
     action_rx: mpsc::UnboundedReceiver<Action>,
+    monitor: Option<ChainMonitor<P>>,
 }
 
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -31,14 +34,18 @@ pub enum Mode {
     Home,
 }
 
-impl App {
-    pub fn new(tick_rate: f64, frame_rate: f64) -> Result<Self> {
-        // TODO: instantiate monitor
+impl<P: ChainProvider + Send + Sync + 'static> App<P> {
+    pub fn new(tick_rate: f64, frame_rate: f64, provider: P) -> Result<Self> {
         let (action_tx, action_rx) = mpsc::unbounded_channel();
+        let mut monitor = ChainMonitor::new(provider);
+        let (block_rx, _transaction_rx, _account_rx) = monitor.receivers();
         Ok(Self {
             tick_rate,
             frame_rate,
-            components: vec![Box::new(Home::new()), Box::new(FpsCounter::default())],
+            components: vec![
+                Box::new(Head::new(block_rx)),
+                Box::new(FpsCounter::default()),
+            ],
             should_quit: false,
             should_suspend: false,
             config: Config::new()?,
@@ -46,11 +53,11 @@ impl App {
             last_tick_key_events: Vec::new(),
             action_tx,
             action_rx,
+            monitor: monitor.into(),
         })
     }
 
     pub async fn run(&mut self) -> Result<()> {
-        // TODO: run monitor
         let mut tui = Tui::new()?
             // .mouse(true) // uncomment this line to enable mouse support
             .tick_rate(self.tick_rate)
@@ -68,6 +75,10 @@ impl App {
         }
 
         let action_tx = self.action_tx.clone();
+        let monitor = self.monitor.take().unwrap();
+        tokio::task::spawn(async move {
+            monitor.run().await;
+        });
         loop {
             self.handle_events(&mut tui).await?;
             self.handle_actions(&mut tui)?;

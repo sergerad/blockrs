@@ -1,6 +1,7 @@
 use clap::Parser;
 use cli::Cli;
 use color_eyre::Result;
+use providers::eth::EthProvider;
 
 use crate::app::App;
 
@@ -11,6 +12,8 @@ mod components;
 mod config;
 mod errors;
 mod logging;
+mod monitor;
+mod providers;
 mod tui;
 
 #[tokio::main]
@@ -19,7 +22,8 @@ async fn main() -> Result<()> {
     crate::logging::init()?;
 
     let args = Cli::parse();
-    let mut app = App::new(args.tick_rate, args.frame_rate)?;
+    let provider = EthProvider::new(args.rpc_url);
+    let mut app = App::new(args.tick_rate, args.frame_rate, provider)?;
     app.run().await?;
     Ok(())
 }

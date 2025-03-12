@@ -1,4 +1,5 @@
 use clap::Parser;
+use url::Url;
 
 use crate::config::{get_config_dir, get_data_dir};
 
@@ -12,7 +13,9 @@ pub struct Cli {
     /// Frame rate, i.e. number of frames per second
     #[arg(short, long, value_name = "FLOAT", default_value_t = 60.0)]
     pub frame_rate: f64,
-    // TODO: rpc url
+
+    /// ...
+    pub rpc_url: Url,
 }
 
 const VERSION_MESSAGE: &str = concat!(
