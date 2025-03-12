@@ -54,8 +54,11 @@ impl ChainProvider for EthProvider {
             let txs: Vec<_> = block
                 .transactions
                 .as_transactions()
-                .map(|tx| Transaction {})
-                .into_iter()
+                .unwrap()
+                .iter()
+                .map(|tx| Transaction {
+                    hash: tx.block_hash.unwrap(),
+                })
                 .collect();
             Ok(txs)
         } else {

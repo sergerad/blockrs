@@ -1,5 +1,7 @@
 use std::fmt::Debug;
 
+use alloy::primitives::FixedBytes;
+
 pub mod eth;
 
 #[derive(Debug, Copy, Clone)]
@@ -8,7 +10,9 @@ pub struct Block {
 }
 
 #[derive(Debug, Copy, Clone)]
-pub struct Transaction {}
+pub struct Transaction {
+    pub hash: FixedBytes<32>,
+}
 
 #[derive(Debug, Copy, Clone)]
 pub struct Account {}

@@ -7,7 +7,7 @@ use tracing::{debug, info};
 
 use crate::{
     action::Action,
-    components::{fps::FpsCounter, head::Head, Component},
+    components::{fps::FpsCounter, head::Head, txlist::TxList, Component},
     config::Config,
     monitor::ChainMonitor,
     providers::ChainProvider,
@@ -38,12 +38,13 @@ impl<P: ChainProvider + Send + Sync + 'static> App<P> {
     pub fn new(tick_rate: f64, frame_rate: f64, provider: P) -> Result<Self> {
         let (action_tx, action_rx) = mpsc::unbounded_channel();
         let mut monitor = ChainMonitor::new(provider);
-        let (block_rx, _transaction_rx, _account_rx) = monitor.receivers();
+        let (block_rx, transaction_rx, _account_rx) = monitor.receivers();
         Ok(Self {
             tick_rate,
             frame_rate,
             components: vec![
                 Box::new(Head::new(block_rx)),
+                Box::new(TxList::new(transaction_rx)),
                 Box::new(FpsCounter::default()),
             ],
             should_quit: false,
@@ -75,7 +76,7 @@ impl<P: ChainProvider + Send + Sync + 'static> App<P> {
         }
 
         let action_tx = self.action_tx.clone();
-        let monitor = self.monitor.take().unwrap();
+        let mut monitor = self.monitor.take().unwrap();
         tokio::task::spawn(async move {
             monitor.run().await;
         });
