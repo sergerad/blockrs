@@ -1,3 +1,6 @@
+use std::time::{Duration, UNIX_EPOCH};
+
+use chrono::{DateTime, Utc};
 use color_eyre::Result;
 use ratatui::{prelude::*, widgets::*};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
@@ -40,20 +43,51 @@ impl Component for Head {
                     self.block.replace(block);
                 }
             }
-            Action::Render => {
-                // add any logic here that should run on every render
-            }
+            Action::Render => {}
             _ => {}
         }
         Ok(None)
     }
 
     fn draw(&mut self, frame: &mut Frame, area: Rect) -> Result<()> {
-        let num = self
-            .block
-            .map(|b| b.number.to_string())
-            .unwrap_or("none".to_string());
-        frame.render_widget(Paragraph::new(num), area);
+        if let Some(block) = &self.block {
+            let timestamp = UNIX_EPOCH + Duration::from_secs(block.timestamp);
+            let datetime = DateTime::<Utc>::from(timestamp);
+            let timestamp = datetime.format("%Y-%m-%d %H:%M:%S").to_string();
+            let header = Row::new(vec![
+                block.number.to_string(),
+                timestamp,
+                block.hash.to_full_string(),
+            ]);
+            let widths = [
+                Constraint::Percentage(5),
+                Constraint::Percentage(15),
+                Constraint::Percentage(20),
+            ];
+            let table = Table::new(vec![header], widths)
+                // ...and they can be separated by a fixed spacing.
+                .column_spacing(2)
+                // You can set the style of the entire Table.
+                .style(Style::new().blue())
+                // It has an optional header, which is simply a Row always visible at the top.
+                //.header(
+                //    Row::new(vec!["number", "hash", "time"])
+                //        .style(Style::new().bold())
+                //        // To add space between the header and the rest of the rows, specify the margin
+                //        .bottom_margin(1),
+                //)
+                // It has an optional footer, which is simply a Row always visible at the bottom.
+                //.footer(Row::new(vec!["blockies"]))
+                // As any other widget, a Table can be wrapped in a Block.
+                .block(ratatui::widgets::Block::bordered().title("Head"))
+                // The selected row, column, cell and its content can also be styled.
+                .row_highlight_style(Style::new().reversed())
+                .column_highlight_style(Style::new().red())
+                .cell_highlight_style(Style::new().blue())
+                // ...and potentially show a symbol in front of the selection.
+                .highlight_symbol(">>");
+            frame.render_widget(table, area);
+        }
         Ok(())
     }
 }

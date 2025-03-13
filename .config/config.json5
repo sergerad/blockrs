@@ -1,5 +1,8 @@
 {
-  "addresses": ["0x49a6D0170bC42d0Dc52653E7ea22e1b06049c967"],
+  "addresses": [
+    "0x49a6D0170bC42d0Dc52653E7ea22e1b06049c967",
+    "0x391E7C679d29bD940d63be94AD22A25d25b5A604"
+  ],
   "keybindings": {
     "Home": {
       "<q>": "Quit", // Quit the application

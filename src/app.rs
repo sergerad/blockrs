@@ -181,10 +181,12 @@ impl<P: ChainProvider + Send + Sync + 'static> App<P> {
 
     fn render(&mut self, tui: &mut Tui) -> Result<()> {
         tui.draw(|frame| {
-            //let vertical = Layout::vertical(Constraint::from_percentages([5, 50, 45]));
             let outer_layout = Layout::default()
                 .direction(Direction::Vertical)
-                .constraints(vec![Constraint::Percentage(5), Constraint::Percentage(65)])
+                .constraints(vec![
+                    Constraint::Percentage(10),
+                    Constraint::Percentage(100),
+                ])
                 .split(frame.area());
 
             let inner_layout = Layout::default()

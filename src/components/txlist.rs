@@ -40,38 +40,25 @@ impl Component for TxList {
                     self.transactions = transactions;
                 }
             }
-            Action::Render => {
-                // add any logic here that should run on every render
-            }
+            Action::Render => {}
             _ => {}
         }
         Ok(None)
     }
 
     fn draw(&mut self, frame: &mut Frame, area: Rect) -> Result<()> {
-        //let messages: Vec<ListItem> = self
-        //    .transactions
-        //    .iter()
-        //    .map(|tx| {
-        //        let content = Line::from(Span::raw(tx.to_string()));
-        //        ListItem::new(content)
-        //    })
-        //    .collect();
-        //let messages =
-        //    List::new(messages).block(ratatui::widgets::Block::bordered().title("Transactions"));
-        //frame.render_widget(messages, area);
-
-        //let rows = [Row::new(vec!["Cell1", "Cell2", "Cell3"])];
-        let mut rows = Vec::new();
-        for tx in &self.transactions {
-            rows.push(Row::new(vec![
-                tx.hash.to_full_string(),
-                tx.from.to_string(),
-                tx.to.to_string(),
-                tx.value.to_string(),
-            ]));
-        }
-        // Columns widths are constrained in the same way as Layout...
+        let rows: Vec<_> = self
+            .transactions
+            .iter()
+            .map(|tx| {
+                Row::new(vec![
+                    tx.hash.to_full_string(),
+                    tx.from.to_string(),
+                    tx.to.to_string(),
+                    tx.value.to_string(),
+                ])
+            })
+            .collect();
         let widths = [
             Constraint::Percentage(40),
             Constraint::Percentage(20),
@@ -93,7 +80,7 @@ impl Component for TxList {
             // It has an optional footer, which is simply a Row always visible at the bottom.
             //.footer(Row::new(vec!["blockies"]))
             // As any other widget, a Table can be wrapped in a Block.
-            .block(Block::bordered().title("Transactions"))
+            .block(ratatui::widgets::Block::bordered().title("Transactions"))
             // The selected row, column, cell and its content can also be styled.
             .row_highlight_style(Style::new().reversed())
             .column_highlight_style(Style::new().red())

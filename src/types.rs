@@ -30,9 +30,11 @@ impl<T: Into<String>> From<T> for HexElement {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
+#[derive(Debug, Clone)]
 pub struct Block {
     pub number: u64,
+    pub hash: HexElement,
+    pub timestamp: u64,
 }
 
 #[derive(Debug, Clone)]

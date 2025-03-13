@@ -49,6 +49,8 @@ impl From<&AlloyBlock> for Block {
     fn from(block: &AlloyBlock) -> Self {
         Self {
             number: block.header.number,
+            timestamp: block.header.timestamp,
+            hash: block.header.hash.to_string().into(),
         }
     }
 }

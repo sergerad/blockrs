@@ -11,6 +11,7 @@ rust-version = "1.85"
 
 [dependencies]
 better-panic = "0.3.0"
+chrono = "0.4"
 clap = { version = "4.5.20", features = [
     "derive",
     "cargo",
