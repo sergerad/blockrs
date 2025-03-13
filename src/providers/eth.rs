@@ -91,9 +91,14 @@ impl ChainProvider for EthProvider {
     }
 
     async fn balances(&self) -> Result<Vec<Account>, Self::Error> {
+        let block = self
+            .head
+            .as_ref()
+            .map(|b| BlockId::from(b.header.number))
+            .unwrap_or(BlockId::latest());
         let mut accounts = Vec::new();
         for addr in &self.addrs {
-            let bal = self.provider.get_balance(*addr).await?;
+            let bal = self.provider.get_balance(*addr).block_id(block).await?;
             accounts.push(Account {
                 balance: bal.to_string(),
                 id: addr.to_string(),

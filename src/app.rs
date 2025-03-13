@@ -1,7 +1,7 @@
 use color_eyre::Result;
 use crossterm::event::KeyEvent;
 use ratatui::{
-    layout::{Constraint, Layout},
+    layout::{Constraint, Direction, Layout},
     prelude::Rect,
 };
 use serde::{Deserialize, Serialize};
@@ -181,12 +181,19 @@ impl<P: ChainProvider + Send + Sync + 'static> App<P> {
 
     fn render(&mut self, tui: &mut Tui) -> Result<()> {
         tui.draw(|frame| {
-            let vertical = Layout::vertical([
-                Constraint::Length(1),
-                Constraint::Length(3),
-                Constraint::Length(3),
-            ]);
-            let areas: [Rect; 3] = vertical.areas(frame.area());
+            //let vertical = Layout::vertical(Constraint::from_percentages([5, 50, 45]));
+            let outer_layout = Layout::default()
+                .direction(Direction::Vertical)
+                .constraints(vec![Constraint::Percentage(5), Constraint::Percentage(65)])
+                .split(frame.area());
+
+            let inner_layout = Layout::default()
+                .direction(Direction::Horizontal)
+                .constraints(vec![Constraint::Percentage(60), Constraint::Percentage(40)])
+                .split(outer_layout[1]);
+
+            let areas = [outer_layout[0], inner_layout[0], inner_layout[1]];
+            //let areas: [Rect; 3] = vertical.areas(frame.area());
             for (i, component) in self.components.iter_mut().enumerate() {
                 if let Err(err) = component.draw(frame, areas[i]) {
                     let _ = self

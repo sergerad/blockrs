@@ -28,8 +28,8 @@ impl Display for Transaction {
     }
 }
 
-fn truncate_hex(hex: &str) -> String {
-    let prefix_len = 4;
+pub fn truncate_hex(hex: &str) -> String {
+    let prefix_len = 6;
     let suffix_len = 4;
     if hex.len() <= prefix_len + suffix_len {
         hex.to_string()

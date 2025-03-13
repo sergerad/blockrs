@@ -5,7 +5,11 @@ use ratatui::{prelude::*, widgets::*};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
 use super::Component;
-use crate::{action::Action, config::Config, types::Transaction};
+use crate::{
+    action::Action,
+    config::Config,
+    types::{truncate_hex, Transaction},
+};
 
 #[derive(Default)]
 pub struct TxList {
@@ -54,17 +58,58 @@ impl Component for TxList {
     }
 
     fn draw(&mut self, frame: &mut Frame, area: Rect) -> Result<()> {
-        let messages: Vec<ListItem> = self
-            .transactions
-            .iter()
-            .map(|tx| {
-                let content = Line::from(Span::raw(tx.to_string()));
-                ListItem::new(content)
-            })
-            .collect();
-        let messages =
-            List::new(messages).block(ratatui::widgets::Block::bordered().title("Transactions"));
-        frame.render_widget(messages, area);
+        //let messages: Vec<ListItem> = self
+        //    .transactions
+        //    .iter()
+        //    .map(|tx| {
+        //        let content = Line::from(Span::raw(tx.to_string()));
+        //        ListItem::new(content)
+        //    })
+        //    .collect();
+        //let messages =
+        //    List::new(messages).block(ratatui::widgets::Block::bordered().title("Transactions"));
+        //frame.render_widget(messages, area);
+
+        //let rows = [Row::new(vec!["Cell1", "Cell2", "Cell3"])];
+        let mut rows = Vec::new();
+        for tx in &self.transactions {
+            rows.push(Row::new(vec![
+                tx.hash.to_string(),
+                truncate_hex(&tx.from),
+                truncate_hex(&tx.to),
+                tx.value.to_string(),
+            ]));
+        }
+        // Columns widths are constrained in the same way as Layout...
+        let widths = [
+            Constraint::Percentage(40),
+            Constraint::Percentage(20),
+            Constraint::Percentage(20),
+            Constraint::Percentage(10),
+        ];
+        let table = Table::new(rows, widths)
+            // ...and they can be separated by a fixed spacing.
+            .column_spacing(2)
+            // You can set the style of the entire Table.
+            .style(Style::new().blue())
+            // It has an optional header, which is simply a Row always visible at the top.
+            .header(
+                Row::new(vec!["hash", "from", "to", "value"])
+                    .style(Style::new().bold())
+                    // To add space between the header and the rest of the rows, specify the margin
+                    .bottom_margin(1),
+            )
+            // It has an optional footer, which is simply a Row always visible at the bottom.
+            //.footer(Row::new(vec!["blockies"]))
+            // As any other widget, a Table can be wrapped in a Block.
+            .block(Block::new().title("Transactions"))
+            // The selected row, column, cell and its content can also be styled.
+            .row_highlight_style(Style::new().reversed())
+            .column_highlight_style(Style::new().red())
+            .cell_highlight_style(Style::new().blue())
+            // ...and potentially show a symbol in front of the selection.
+            .highlight_symbol(">>");
+        frame.render_widget(table, area);
         Ok(())
     }
 }
