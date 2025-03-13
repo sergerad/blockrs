@@ -76,7 +76,8 @@ impl ChainProvider for EthProvider {
                 .unwrap()
                 .iter()
                 .map(|tx| Transaction {
-                    value: tx.inner.value().to_string(),
+                    unit: "gwei".to_string(),
+                    value: format_units(tx.inner.value(), "gwei").unwrap(),
                     hash: tx.inner.tx_hash().to_string(),
                     from: tx.inner.signer().to_string(),
                     to: tx

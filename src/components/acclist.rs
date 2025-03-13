@@ -71,15 +71,15 @@ impl Component for AccList {
             .map(|acc| {
                 Row::new(vec![
                     acc.address.abridged(),
-                    acc.balance.clone(),
                     acc.unit.clone(),
+                    acc.balance.clone(),
                 ])
             })
             .collect();
         let widths = [
-            Constraint::Percentage(30),
-            Constraint::Percentage(60),
-            Constraint::Percentage(10),
+            Constraint::Min(11),
+            Constraint::Min(5),
+            Constraint::Percentage(100),
         ];
         let table = Table::new(rows, widths)
             .column_spacing(2)

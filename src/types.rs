@@ -1,4 +1,4 @@
-use std::fmt::{Debug, Display, Formatter};
+use std::fmt::Debug;
 
 pub trait Abridged {
     fn abridged(&self) -> String;
@@ -31,6 +31,7 @@ pub struct Transaction {
     pub from: String,
     pub to: String,
     pub value: String,
+    pub unit: String,
 }
 
 #[derive(Debug, Clone)]

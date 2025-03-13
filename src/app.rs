@@ -47,8 +47,8 @@ impl<P: ChainProvider + Send + Sync + 'static> App<P> {
             frame_rate,
             components: vec![
                 Box::new(Head::new(block_rx)),
-                Box::new(TxList::new(transaction_rx)),
                 Box::new(AccList::new(account_rx)),
+                Box::new(TxList::new(transaction_rx)),
             ],
             should_quit: false,
             should_suspend: false,
@@ -183,19 +183,15 @@ impl<P: ChainProvider + Send + Sync + 'static> App<P> {
         tui.draw(|frame| {
             let outer_layout = Layout::default()
                 .direction(Direction::Vertical)
-                .constraints(vec![
-                    Constraint::Percentage(10),
-                    Constraint::Percentage(100),
-                ])
+                .constraints(vec![Constraint::Percentage(20), Constraint::Percentage(80)])
                 .split(frame.area());
 
             let inner_layout = Layout::default()
                 .direction(Direction::Horizontal)
                 .constraints(vec![Constraint::Percentage(60), Constraint::Percentage(40)])
-                .split(outer_layout[1]);
+                .split(outer_layout[0]);
 
-            let areas = [outer_layout[0], inner_layout[0], inner_layout[1]];
-            //let areas: [Rect; 3] = vertical.areas(frame.area());
+            let areas = [inner_layout[0], inner_layout[1], outer_layout[1]];
             for (i, component) in self.components.iter_mut().enumerate() {
                 if let Err(err) = component.draw(frame, areas[i]) {
                     let _ = self

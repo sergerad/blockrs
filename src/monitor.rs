@@ -56,11 +56,12 @@ impl<P> ChainMonitor<P> {
 impl<P: ChainProvider + Sync> ChainMonitor<P> {
     pub async fn run(&mut self) {
         let mut tick_interval = interval(Duration::from_secs(2));
-        let head_number = 0u64;
+        let mut head_number = 0u64;
         loop {
             tick_interval.tick().await;
             let block = self.provider.head().await.unwrap();
             if block.number > head_number {
+                head_number = block.number;
                 self.block_tx.send(block).unwrap();
                 let txs = self.provider.transactions().await.unwrap();
                 self.transaction_tx.send(txs).unwrap();

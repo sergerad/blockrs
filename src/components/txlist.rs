@@ -15,6 +15,7 @@ pub struct TxList {
     config: Config,
     transaction_rx: Option<UnboundedReceiver<Vec<Transaction>>>,
     transactions: Vec<Transaction>,
+    value_column_name: String,
 }
 
 impl TxList {
@@ -41,7 +42,12 @@ impl Component for TxList {
         match action {
             Action::Tick => {
                 if let Ok(transactions) = self.transaction_rx.as_mut().unwrap().try_recv() {
-                    self.transactions = transactions;
+                    if !transactions.is_empty() {
+                        self.transactions = transactions;
+                        if self.value_column_name.is_empty() {
+                            self.value_column_name = self.transactions[0].unit.to_uppercase();
+                        }
+                    }
                 }
             }
             Action::Render => {}
@@ -59,7 +65,7 @@ impl Component for TxList {
                     tx.hash.clone(),
                     tx.from.abridged(),
                     tx.to.abridged(),
-                    tx.value.abridged(),
+                    tx.value.clone(),
                 ])
             })
             .collect();
@@ -73,8 +79,9 @@ impl Component for TxList {
             .column_spacing(2)
             .style(Style::new().blue())
             .header(
-                Row::new(vec!["HASH", "FROM", "TO", "VALUE"]).style(Style::new().bold().italic()), // To add space between the header and the rest of the rows, specify the margin
-                                                                                                   //.bottom_margin(1),
+                Row::new(vec!["HASH", "FROM", "TO", &self.value_column_name])
+                    .style(Style::new().bold().italic()), // To add space between the header and the rest of the rows, specify the margin
+                                                          //.bottom_margin(1),
             )
             .block(ratatui::widgets::Block::bordered().title("TRANSACTIONS"))
             .row_highlight_style(Style::new().reversed())
