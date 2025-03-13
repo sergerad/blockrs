@@ -93,7 +93,7 @@ impl Component for TxList {
             // It has an optional footer, which is simply a Row always visible at the bottom.
             //.footer(Row::new(vec!["blockies"]))
             // As any other widget, a Table can be wrapped in a Block.
-            .block(Block::new().title("Transactions"))
+            .block(Block::bordered().title("Transactions"))
             // The selected row, column, cell and its content can also be styled.
             .row_highlight_style(Style::new().reversed())
             .column_highlight_style(Style::new().red())
