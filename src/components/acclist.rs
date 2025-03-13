@@ -5,7 +5,11 @@ use ratatui::{prelude::*, widgets::*};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
 use super::Component;
-use crate::{action::Action, config::Config, types::Account};
+use crate::{
+    action::Action,
+    config::Config,
+    types::{Abridged, Account},
+};
 
 #[derive(Default)]
 pub struct AccList {
@@ -49,18 +53,49 @@ impl Component for AccList {
     }
 
     fn draw(&mut self, frame: &mut Frame, area: Rect) -> Result<()> {
-        let messages: Vec<ListItem> = self
+        //let messages: Vec<ListItem> = self
+        //    .accounts
+        //    .values()
+        //    .map(|acc| {
+        //        let content = Line::from(Span::raw(acc.to_string()));
+        //        ListItem::new(content)
+        //    })
+        //    .collect();
+        //let messages = List::new(messages)
+        //    .block(ratatui::widgets::Block::bordered().title("Balances"))
+        //    .style(Style::new().green().italic());
+        //frame.render_widget(messages, area);
+        let rows: Vec<_> = self
             .accounts
             .values()
             .map(|acc| {
-                let content = Line::from(Span::raw(acc.to_string()));
-                ListItem::new(content)
+                Row::new(vec![
+                    acc.address.abridged(),
+                    acc.balance.clone(),
+                    acc.unit.clone(),
+                ])
             })
             .collect();
-        let messages = List::new(messages)
-            .block(ratatui::widgets::Block::bordered().title("Balances"))
-            .style(Style::new().green().italic());
-        frame.render_widget(messages, area);
+        let widths = [
+            Constraint::Percentage(30),
+            Constraint::Percentage(60),
+            Constraint::Percentage(10),
+        ];
+        let table = Table::new(rows, widths)
+            .column_spacing(2)
+            .style(Style::new().green())
+            //.header(
+            //    Row::new(vec!["addr", "balance", "units"])
+            //        .style(Style::new().bold())
+            //        // To add space between the header and the rest of the rows, specify the margin
+            //        .bottom_margin(1),
+            //)
+            .block(ratatui::widgets::Block::bordered().title("BALANCES"))
+            .row_highlight_style(Style::new().reversed())
+            .column_highlight_style(Style::new().red())
+            .cell_highlight_style(Style::new().blue())
+            .highlight_symbol(">>");
+        frame.render_widget(table, area);
         Ok(())
     }
 }

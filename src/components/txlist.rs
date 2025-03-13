@@ -6,7 +6,7 @@ use super::Component;
 use crate::{
     action::Action,
     config::Config,
-    types::{Abbreviated, Transaction},
+    types::{Abridged, Transaction},
 };
 
 #[derive(Default)]
@@ -57,9 +57,9 @@ impl Component for TxList {
             .map(|tx| {
                 Row::new(vec![
                     tx.hash.clone(),
-                    tx.from.abbreviated(),
-                    tx.to.abbreviated(),
-                    tx.value.abbreviated(),
+                    tx.from.abridged(),
+                    tx.to.abridged(),
+                    tx.value.abridged(),
                 ])
             })
             .collect();
@@ -70,26 +70,16 @@ impl Component for TxList {
             Constraint::Percentage(10),
         ];
         let table = Table::new(rows, widths)
-            // ...and they can be separated by a fixed spacing.
             .column_spacing(2)
-            // You can set the style of the entire Table.
             .style(Style::new().blue())
-            // It has an optional header, which is simply a Row always visible at the top.
             .header(
-                Row::new(vec!["hash", "from", "to", "value"])
-                    .style(Style::new().bold())
-                    // To add space between the header and the rest of the rows, specify the margin
-                    .bottom_margin(1),
+                Row::new(vec!["HASH", "FROM", "TO", "VALUE"]).style(Style::new().bold().italic()), // To add space between the header and the rest of the rows, specify the margin
+                                                                                                   //.bottom_margin(1),
             )
-            // It has an optional footer, which is simply a Row always visible at the bottom.
-            //.footer(Row::new(vec!["blockies"]))
-            // As any other widget, a Table can be wrapped in a Block.
-            .block(ratatui::widgets::Block::bordered().title("Transactions"))
-            // The selected row, column, cell and its content can also be styled.
+            .block(ratatui::widgets::Block::bordered().title("TRANSACTIONS"))
             .row_highlight_style(Style::new().reversed())
             .column_highlight_style(Style::new().red())
             .cell_highlight_style(Style::new().blue())
-            // ...and potentially show a symbol in front of the selection.
             .highlight_symbol(">>");
         frame.render_widget(table, area);
         Ok(())

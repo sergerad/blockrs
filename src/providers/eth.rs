@@ -2,6 +2,7 @@ use crate::config::Config;
 use crate::providers::{Account, Block, ChainProvider, Transaction};
 use alloy::consensus::Transaction as AlloyTransaction;
 use alloy::eips::BlockId;
+use alloy::primitives::utils::format_units;
 use alloy::primitives::Address as AlloyAddress;
 use alloy::providers::{DynProvider, Provider, ProviderBuilder};
 use alloy::rpc::types::Block as AlloyBlock;
@@ -100,9 +101,11 @@ impl ChainProvider for EthProvider {
         let mut accounts = Vec::new();
         for addr in &self.addrs {
             let bal = self.provider.get_balance(*addr).block_id(block).await?;
+            let gwei = format_units(bal, "gwei").unwrap();
             accounts.push(Account {
-                balance: bal.to_string(),
+                balance: gwei,
                 address: addr.to_string(),
+                unit: "gwei".to_string(),
             });
         }
         Ok(accounts)

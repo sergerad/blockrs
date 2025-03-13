@@ -1,11 +1,11 @@
 use std::fmt::{Debug, Display, Formatter};
 
-pub trait Abbreviated {
-    fn abbreviated(&self) -> String;
+pub trait Abridged {
+    fn abridged(&self) -> String;
 }
 
-impl Abbreviated for String {
-    fn abbreviated(&self) -> String {
+impl Abridged for String {
+    fn abridged(&self) -> String {
         let prefix_len = 6;
         let suffix_len = 4;
         if self.len() <= prefix_len + suffix_len {
@@ -37,10 +37,5 @@ pub struct Transaction {
 pub struct Account {
     pub address: String,
     pub balance: String,
-}
-
-impl Display for Account {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} {}", self.address, self.balance)
-    }
+    pub unit: String,
 }
