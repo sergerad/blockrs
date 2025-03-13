@@ -1,26 +1,20 @@
-use std::collections::VecDeque;
-
 use color_eyre::Result;
 use ratatui::{prelude::*, widgets::*};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
 use super::Component;
-use crate::{
-    action::Action,
-    config::Config,
-    types::{truncate_hex, Transaction},
-};
+use crate::{action::Action, config::Config, types::Transaction};
 
 #[derive(Default)]
 pub struct TxList {
     command_tx: Option<UnboundedSender<Action>>,
     config: Config,
-    transaction_rx: Option<UnboundedReceiver<Transaction>>,
-    transactions: VecDeque<Transaction>,
+    transaction_rx: Option<UnboundedReceiver<Vec<Transaction>>>,
+    transactions: Vec<Transaction>,
 }
 
 impl TxList {
-    pub fn new(transaction_rx: UnboundedReceiver<Transaction>) -> Self {
+    pub fn new(transaction_rx: UnboundedReceiver<Vec<Transaction>>) -> Self {
         Self {
             transaction_rx: transaction_rx.into(),
             ..Default::default()
@@ -42,11 +36,8 @@ impl Component for TxList {
     fn update(&mut self, action: Action) -> Result<Option<Action>> {
         match action {
             Action::Tick => {
-                while let Ok(block) = self.transaction_rx.as_mut().unwrap().try_recv() {
-                    self.transactions.push_back(block);
-                    if self.transactions.len() > 30 {
-                        self.transactions.pop_front();
-                    }
+                if let Ok(transactions) = self.transaction_rx.as_mut().unwrap().try_recv() {
+                    self.transactions = transactions;
                 }
             }
             Action::Render => {
@@ -74,9 +65,9 @@ impl Component for TxList {
         let mut rows = Vec::new();
         for tx in &self.transactions {
             rows.push(Row::new(vec![
-                tx.hash.to_string(),
-                truncate_hex(&tx.from),
-                truncate_hex(&tx.to),
+                tx.hash.to_full_string(),
+                tx.from.to_string(),
+                tx.to.to_string(),
                 tx.value.to_string(),
             ]));
         }

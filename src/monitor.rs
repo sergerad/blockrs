@@ -9,10 +9,10 @@ use tokio::{
 
 pub struct ChainMonitor<P> {
     block_tx: Sender<Block>,
-    transaction_tx: Sender<Transaction>,
+    transaction_tx: Sender<Vec<Transaction>>,
     account_tx: Sender<Account>,
     block_rx: Option<Receiver<Block>>,
-    transaction_rx: Option<Receiver<Transaction>>,
+    transaction_rx: Option<Receiver<Vec<Transaction>>>,
     account_rx: Option<Receiver<Account>>,
     provider: P,
 }
@@ -38,7 +38,13 @@ impl<P> ChainMonitor<P> {
     /// # Panics
     ///
     /// ...
-    pub fn receivers(&mut self) -> (Receiver<Block>, Receiver<Transaction>, Receiver<Account>) {
+    pub fn receivers(
+        &mut self,
+    ) -> (
+        Receiver<Block>,
+        Receiver<Vec<Transaction>>,
+        Receiver<Account>,
+    ) {
         (
             self.block_rx.take().unwrap(),
             self.transaction_rx.take().unwrap(),
@@ -57,9 +63,7 @@ impl<P: ChainProvider + Sync> ChainMonitor<P> {
             if block.number > head_number {
                 self.block_tx.send(block).unwrap();
                 let txs = self.provider.transactions().await.unwrap();
-                txs.into_iter().for_each(|tx| {
-                    self.transaction_tx.send(tx).unwrap();
-                });
+                self.transaction_tx.send(txs).unwrap();
                 self.provider
                     .balances()
                     .await

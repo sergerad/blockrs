@@ -73,14 +73,13 @@ impl ChainProvider for EthProvider {
                 .unwrap()
                 .iter()
                 .map(|tx| Transaction {
-                    value: tx.inner.value().to_string(),
-                    block_number: tx.block_number.unwrap(),
-                    hash: tx.inner.tx_hash().to_string(),
-                    from: tx.inner.signer().to_string(),
+                    value: tx.inner.value().to_string().into(),
+                    hash: tx.inner.tx_hash().to_string().into(),
+                    from: tx.inner.signer().to_string().into(),
                     to: tx
                         .inner
                         .to()
-                        .map(|addr| addr.to_string())
+                        .map(|addr| addr.to_string().into())
                         .unwrap_or_default(),
                 })
                 .collect();
@@ -101,7 +100,7 @@ impl ChainProvider for EthProvider {
             let bal = self.provider.get_balance(*addr).block_id(block).await?;
             accounts.push(Account {
                 balance: bal.to_string(),
-                id: addr.to_string(),
+                address: addr.to_string().into(),
             });
         }
         Ok(accounts)
