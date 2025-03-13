@@ -57,7 +57,7 @@ impl Component for Head {
             let header = Row::new(vec![
                 block.number.to_string(),
                 timestamp,
-                block.hash.to_full_string(),
+                block.hash.clone(),
             ]);
             let widths = [
                 Constraint::Percentage(5),

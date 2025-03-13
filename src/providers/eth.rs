@@ -50,7 +50,7 @@ impl From<&AlloyBlock> for Block {
         Self {
             number: block.header.number,
             timestamp: block.header.timestamp,
-            hash: block.header.hash.to_string().into(),
+            hash: block.header.hash.to_string(),
         }
     }
 }
@@ -75,13 +75,13 @@ impl ChainProvider for EthProvider {
                 .unwrap()
                 .iter()
                 .map(|tx| Transaction {
-                    value: tx.inner.value().to_string().into(),
-                    hash: tx.inner.tx_hash().to_string().into(),
-                    from: tx.inner.signer().to_string().into(),
+                    value: tx.inner.value().to_string(),
+                    hash: tx.inner.tx_hash().to_string(),
+                    from: tx.inner.signer().to_string(),
                     to: tx
                         .inner
                         .to()
-                        .map(|addr| addr.to_string().into())
+                        .map(|addr| addr.to_string())
                         .unwrap_or_default(),
                 })
                 .collect();
@@ -102,7 +102,7 @@ impl ChainProvider for EthProvider {
             let bal = self.provider.get_balance(*addr).block_id(block).await?;
             accounts.push(Account {
                 balance: bal.to_string(),
-                address: addr.to_string().into(),
+                address: addr.to_string(),
             });
         }
         Ok(accounts)

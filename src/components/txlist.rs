@@ -3,7 +3,11 @@ use ratatui::{prelude::*, widgets::*};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
 use super::Component;
-use crate::{action::Action, config::Config, types::Transaction};
+use crate::{
+    action::Action,
+    config::Config,
+    types::{Abbreviated, Transaction},
+};
 
 #[derive(Default)]
 pub struct TxList {
@@ -52,10 +56,10 @@ impl Component for TxList {
             .iter()
             .map(|tx| {
                 Row::new(vec![
-                    tx.hash.to_full_string(),
-                    tx.from.to_string(),
-                    tx.to.to_string(),
-                    tx.value.to_string(),
+                    tx.hash.clone(),
+                    tx.from.abbreviated(),
+                    tx.to.abbreviated(),
+                    tx.value.abbreviated(),
                 ])
             })
             .collect();

@@ -1,53 +1,41 @@
 use std::fmt::{Debug, Display, Formatter};
 
-#[derive(Debug, Clone, Default)]
-pub struct HexElement(String);
-
-impl HexElement {
-    pub fn to_full_string(&self) -> String {
-        self.0.clone()
-    }
+pub trait Abbreviated {
+    fn abbreviated(&self) -> String;
 }
 
-impl Display for HexElement {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+impl Abbreviated for String {
+    fn abbreviated(&self) -> String {
         let prefix_len = 6;
         let suffix_len = 4;
-        let hex = &self.0;
-        if hex.len() <= prefix_len + suffix_len {
-            write!(f, "{}", hex)
+        if self.len() <= prefix_len + suffix_len {
+            self.clone()
         } else {
-            let prefix = &hex[..prefix_len];
-            let suffix = &hex[hex.len() - suffix_len..];
-            write!(f, "{}..{}", prefix, suffix)
+            let prefix = &self[..prefix_len];
+            let suffix = &self[self.len() - suffix_len..];
+            format!("{}..{}", prefix, suffix)
         }
-    }
-}
-
-impl<T: Into<String>> From<T> for HexElement {
-    fn from(value: T) -> Self {
-        Self(value.into())
     }
 }
 
 #[derive(Debug, Clone)]
 pub struct Block {
     pub number: u64,
-    pub hash: HexElement,
+    pub hash: String,
     pub timestamp: u64,
 }
 
 #[derive(Debug, Clone)]
 pub struct Transaction {
-    pub hash: HexElement,
-    pub from: HexElement,
-    pub to: HexElement,
-    pub value: HexElement,
+    pub hash: String,
+    pub from: String,
+    pub to: String,
+    pub value: String,
 }
 
 #[derive(Debug, Clone)]
 pub struct Account {
-    pub address: HexElement,
+    pub address: String,
     pub balance: String,
 }
 
