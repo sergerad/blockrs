@@ -8,7 +8,7 @@ use tokio::sync::mpsc::UnboundedSender;
 
 use crate::{action::Action, config::Config, tui::Event};
 
-pub mod fps;
+pub mod acclist;
 pub mod head;
 pub mod txlist;
 

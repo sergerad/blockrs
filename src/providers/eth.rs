@@ -1,25 +1,38 @@
+use crate::config::Config;
 use crate::providers::{Account, Block, ChainProvider, Transaction};
 use alloy::consensus::Transaction as AlloyTransaction;
 use alloy::eips::BlockId;
+use alloy::primitives::Address as AlloyAddress;
 use alloy::providers::{DynProvider, Provider, ProviderBuilder};
 use alloy::rpc::types::Block as AlloyBlock;
 use alloy::transports::{RpcError, TransportErrorKind};
+use config::ConfigError;
+use std::str::FromStr;
 use url::Url;
 
 #[derive(Debug, Clone)]
 pub struct EthProvider {
     provider: DynProvider,
     head: Option<AlloyBlock>,
+    addrs: Vec<AlloyAddress>,
 }
 
 impl EthProvider {
-    pub fn new(url: Url) -> Self {
+    pub fn new(url: Url) -> Result<Self, ConfigError> {
+        let config = Config::new()?;
+        let addrs: Vec<_> = config
+            .config
+            .addresses
+            .iter()
+            .map(|addr| AlloyAddress::from_str(addr.as_str()).unwrap())
+            .collect();
         let provider = ProviderBuilder::new().on_http(url);
         let provider = DynProvider::new(provider);
-        Self {
+        Ok(Self {
             provider,
+            addrs,
             head: None,
-        }
+        })
     }
 }
 
@@ -43,6 +56,7 @@ impl From<&AlloyBlock> for Block {
 #[async_trait::async_trait]
 impl ChainProvider for EthProvider {
     type Error = EthProviderError;
+
     async fn head(&mut self) -> Result<Block, Self::Error> {
         let block = self.provider.get_block(BlockId::latest()).full().await?;
         let block = block.ok_or(EthProviderError::NoHead)?;
@@ -50,6 +64,7 @@ impl ChainProvider for EthProvider {
         self.head = block.into();
         Ok(result_block)
     }
+
     async fn transactions(&self) -> Result<Vec<Transaction>, Self::Error> {
         if let Some(block) = &self.head {
             let txs: Vec<_> = block
@@ -76,6 +91,14 @@ impl ChainProvider for EthProvider {
     }
 
     async fn balances(&self) -> Result<Vec<Account>, Self::Error> {
-        todo!()
+        let mut accounts = Vec::new();
+        for addr in &self.addrs {
+            let bal = self.provider.get_balance(*addr).await?;
+            accounts.push(Account {
+                balance: bal.to_string(),
+                id: addr.to_string(),
+            });
+        }
+        Ok(accounts)
     }
 }

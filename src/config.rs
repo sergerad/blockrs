@@ -21,6 +21,8 @@ pub struct AppConfig {
     pub data_dir: PathBuf,
     #[serde(default)]
     pub config_dir: PathBuf,
+    #[serde(default)]
+    pub addresses: Vec<String>,
 }
 
 #[derive(Clone, Debug, Default, Deserialize)]

@@ -23,7 +23,7 @@ async fn main() -> Result<()> {
     crate::logging::init()?;
 
     let args = Cli::parse();
-    let provider = EthProvider::new(args.rpc_url);
+    let provider = EthProvider::new(args.rpc_url)?;
     let mut app = App::new(args.tick_rate, args.frame_rate, provider)?;
     app.run().await?;
     Ok(())

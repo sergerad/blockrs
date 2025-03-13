@@ -60,6 +60,12 @@ impl<P: ChainProvider + Sync> ChainMonitor<P> {
                 txs.into_iter().for_each(|tx| {
                     self.transaction_tx.send(tx).unwrap();
                 });
+                self.provider
+                    .balances()
+                    .await
+                    .unwrap()
+                    .into_iter()
+                    .for_each(|acc| self.account_tx.send(acc).unwrap());
             }
         }
     }

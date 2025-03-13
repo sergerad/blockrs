@@ -41,5 +41,14 @@ fn truncate_hex(hex: &str) -> String {
     }
 }
 
-#[derive(Debug, Copy, Clone)]
-pub struct Account {}
+#[derive(Debug, Clone)]
+pub struct Account {
+    pub id: String,
+    pub balance: String,
+}
+
+impl Display for Account {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} {}", truncate_hex(self.id.as_str()), self.balance)
+    }
+}

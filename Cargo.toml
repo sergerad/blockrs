@@ -5,7 +5,7 @@ edition = "2021"
 description = "TUI for tailing Ethereum blocks, transactions, and balances"
 authors = ["sergerad <serge.radinovich@immutable.com>"]
 build = "build.rs"
-
+rust-version = "1.85"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 

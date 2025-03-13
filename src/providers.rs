@@ -1,5 +1,3 @@
-//use std::fmt::{Debug, Display, Formatter};
-
 pub mod eth;
 
 use crate::types::{Account, Block, Transaction};

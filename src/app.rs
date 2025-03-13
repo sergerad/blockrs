@@ -10,7 +10,7 @@ use tracing::{debug, info};
 
 use crate::{
     action::Action,
-    components::{fps::FpsCounter, head::Head, txlist::TxList, Component},
+    components::{acclist::AccList, head::Head, txlist::TxList, Component},
     config::Config,
     monitor::ChainMonitor,
     providers::ChainProvider,
@@ -41,14 +41,14 @@ impl<P: ChainProvider + Send + Sync + 'static> App<P> {
     pub fn new(tick_rate: f64, frame_rate: f64, provider: P) -> Result<Self> {
         let (action_tx, action_rx) = mpsc::unbounded_channel();
         let mut monitor = ChainMonitor::new(provider);
-        let (block_rx, transaction_rx, _account_rx) = monitor.receivers();
+        let (block_rx, transaction_rx, account_rx) = monitor.receivers();
         Ok(Self {
             tick_rate,
             frame_rate,
             components: vec![
                 Box::new(Head::new(block_rx)),
-                Box::new(FpsCounter::default()),
                 Box::new(TxList::new(transaction_rx)),
+                Box::new(AccList::new(account_rx)),
             ],
             should_quit: false,
             should_suspend: false,
@@ -184,7 +184,7 @@ impl<P: ChainProvider + Send + Sync + 'static> App<P> {
             let vertical = Layout::vertical([
                 Constraint::Length(1),
                 Constraint::Length(3),
-                Constraint::Min(1),
+                Constraint::Length(3),
             ]);
             let areas: [Rect; 3] = vertical.areas(frame.area());
             for (i, component) in self.components.iter_mut().enumerate() {
