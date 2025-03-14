@@ -1,11 +1,17 @@
 [package]
-name = "blktail"
+name = "blockrs"
 version = "0.1.0"
 edition = "2021"
-description = "TUI for tailing Ethereum blocks, transactions, and balances"
+description = "TUI for tailing chain data"
 authors = ["sergerad <serge.radinovich@immutable.com>"]
+repository = "https://github.com/sergerad/blockrs"
+license-file = "LICENSE"
 build = "build.rs"
+readme = "README.md"
+keywords = ["tui", "ethereum"]
+categories = ["command-line-utilities"]
 rust-version = "1.85"
+include = ["**/*.rs", "Cargo.toml", ".config/*"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -13,12 +19,12 @@ rust-version = "1.85"
 better-panic = "0.3.0"
 chrono = "0.4"
 clap = { version = "4.5.20", features = [
-    "derive",
-    "cargo",
-    "wrap_help",
-    "unicode",
-    "string",
-    "unstable-styles",
+  "derive",
+  "cargo",
+  "wrap_help",
+  "unicode",
+  "string",
+  "unstable-styles",
 ] }
 color-eyre = "0.6.3"
 config = "0.14.0"
@@ -42,7 +48,7 @@ tokio-util = "0.7.12"
 tracing = "0.1.40"
 tracing-error = "0.2.0"
 tracing-subscriber = { version = "0.3.18", features = ["env-filter", "serde"] }
-alloy = { version = "0.12"}
+alloy = { version = "0.12" }
 url = "2.5"
 thiserror = "2.0"
 async-trait = "0.1"
