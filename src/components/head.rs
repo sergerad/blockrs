@@ -4,7 +4,7 @@ use std::{
 };
 
 use chrono::{DateTime, Utc};
-use color_eyre::{owo_colors::OwoColorize, Result};
+use color_eyre::Result;
 use crossterm::event::KeyCode;
 use ratatui::{prelude::*, widgets::*};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
@@ -78,10 +78,12 @@ impl Component for Head {
     fn update(&mut self, action: Action) -> Result<Option<Action>> {
         match action {
             Action::Tick => {
-                if let Ok(block) = self.block_rx.as_mut().unwrap().try_recv() {
-                    self.blocks.push_front(block);
-                    if self.blocks.len() > 10 {
-                        self.blocks.pop_back();
+                if matches!(self.mode, Mode::Follow) {
+                    if let Ok(block) = self.block_rx.as_mut().unwrap().try_recv() {
+                        self.blocks.push_front(block);
+                        if self.blocks.len() > 10 {
+                            self.blocks.pop_back();
+                        }
                     }
                 }
             }
@@ -106,7 +108,7 @@ impl Component for Head {
                     block.hash.clone(),
                 ]);
                 if i == self.block_idx {
-                    row.red()
+                    row.white()
                 } else {
                     row.blue()
                 }
