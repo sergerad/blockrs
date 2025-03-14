@@ -5,19 +5,11 @@ use std::{
 
 use chrono::{DateTime, Utc};
 use color_eyre::Result;
-use crossterm::event::KeyCode;
 use ratatui::{prelude::*, widgets::*};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
 use super::Component;
-use crate::{action::Action, config::Config, tui::Event, types::Block};
-
-#[derive(Default)]
-enum Mode {
-    #[default]
-    Follow,
-    Interactive,
-}
+use crate::{action::Action, app::Mode, config::Config, types::Block};
 
 #[derive(Default)]
 pub struct Head {
@@ -49,34 +41,23 @@ impl Component for Head {
         Ok(())
     }
 
-    fn handle_events(&mut self, event: Option<Event>) -> Result<Option<Action>> {
-        if let Some(Event::Key(key_event)) = event {
-            self.block_idx = match key_event.code {
-                KeyCode::Char('j') => {
-                    // TODO: send action for txlist and acclist
-                    self.mode = Mode::Interactive;
-                    self.block_idx
-                        .saturating_add(1)
-                        .min(self.blocks.len().saturating_sub(1))
-                }
-                KeyCode::Char('k') => {
-                    // TODO: send action for txlist and acclist
-                    self.mode = Mode::Interactive;
-                    self.block_idx.saturating_sub(1)
-                }
-                KeyCode::Char('f') => {
-                    // TODO: send action for txlist and acclist
-                    self.mode = Mode::Follow;
-                    0usize
-                }
-                _ => self.block_idx,
-            }
-        }
-        Ok(None)
-    }
-
     fn update(&mut self, action: Action) -> Result<Option<Action>> {
         match action {
+            Action::Down => {
+                self.mode = Mode::Interactive;
+                self.block_idx = self
+                    .block_idx
+                    .saturating_add(1)
+                    .min(self.blocks.len().saturating_sub(1));
+            }
+            Action::Up => {
+                self.mode = Mode::Interactive;
+                self.block_idx = self.block_idx.saturating_sub(1);
+            }
+            Action::Follow => {
+                self.mode = Mode::Follow;
+                self.block_idx = 0usize;
+            }
             Action::Tick => {
                 if matches!(self.mode, Mode::Follow) {
                     if let Ok(block) = self.block_rx.as_mut().unwrap().try_recv() {

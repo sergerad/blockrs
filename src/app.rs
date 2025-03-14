@@ -24,17 +24,24 @@ pub struct App<P> {
     components: Vec<Box<dyn Component>>,
     should_quit: bool,
     should_suspend: bool,
-    mode: Mode,
+    setting: Setting,
     last_tick_key_events: Vec<KeyEvent>,
     action_tx: mpsc::UnboundedSender<Action>,
     action_rx: mpsc::UnboundedReceiver<Action>,
     monitor: Option<ChainMonitor<P>>,
 }
 
-#[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Default, Clone, Debug, Serialize, Deserialize)]
 pub enum Mode {
     #[default]
-    Home,
+    Follow,
+    Interactive,
+}
+
+#[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
+pub enum Setting {
+    #[default]
+    Default,
 }
 
 impl<P: ChainProvider + Send + Sync + 'static> App<P> {
@@ -53,7 +60,7 @@ impl<P: ChainProvider + Send + Sync + 'static> App<P> {
             should_quit: false,
             should_suspend: false,
             config: Config::new()?,
-            mode: Mode::Home,
+            setting: Setting::Default,
             last_tick_key_events: Vec::new(),
             action_tx,
             action_rx,
@@ -124,7 +131,7 @@ impl<P: ChainProvider + Send + Sync + 'static> App<P> {
 
     fn handle_key_event(&mut self, key: KeyEvent) -> Result<()> {
         let action_tx = self.action_tx.clone();
-        let Some(keymap) = self.config.keybindings.get(&self.mode) else {
+        let Some(keymap) = self.config.keybindings.get(&self.setting) else {
             return Ok(());
         };
         match keymap.get(&vec![key]) {

@@ -3,11 +3,14 @@
     "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
   ],
   "keybindings": {
-    "Home": {
-      "<q>": "Quit", // Quit the application
-      "<Ctrl-d>": "Quit", // Another way to quit
-      "<Ctrl-c>": "Quit", // Yet another way to quit
-      "<Ctrl-z>": "Suspend" // Suspend the application
+    "Default": {
+      "<q>": "Quit",
+      "<Ctrl-d>": "Quit",
+      "<Ctrl-c>": "Quit",
+      "<Ctrl-z>": "Suspend",
+      "<j>": "Down",
+      "<k>": "Up",
+      "<f>": "Follow",
     },
   }
 }
