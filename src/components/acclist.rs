@@ -53,18 +53,6 @@ impl Component for AccList {
     }
 
     fn draw(&mut self, frame: &mut Frame, area: Rect) -> Result<()> {
-        //let messages: Vec<ListItem> = self
-        //    .accounts
-        //    .values()
-        //    .map(|acc| {
-        //        let content = Line::from(Span::raw(acc.to_string()));
-        //        ListItem::new(content)
-        //    })
-        //    .collect();
-        //let messages = List::new(messages)
-        //    .block(ratatui::widgets::Block::bordered().title("Balances"))
-        //    .style(Style::new().green().italic());
-        //frame.render_widget(messages, area);
         let rows: Vec<_> = self
             .accounts
             .values()
@@ -90,7 +78,11 @@ impl Component for AccList {
             //        // To add space between the header and the rest of the rows, specify the margin
             //        .bottom_margin(1),
             //)
-            .block(ratatui::widgets::Block::bordered().title("BALANCES"))
+            .block(
+                ratatui::widgets::Block::bordered()
+                    .title("BALANCES")
+                    .title_alignment(Alignment::Right),
+            )
             .row_highlight_style(Style::new().reversed())
             .column_highlight_style(Style::new().red())
             .cell_highlight_style(Style::new().blue())

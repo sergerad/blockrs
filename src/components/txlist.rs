@@ -83,7 +83,11 @@ impl Component for TxList {
                     .style(Style::new().bold().italic()), // To add space between the header and the rest of the rows, specify the margin
                                                           //.bottom_margin(1),
             )
-            .block(ratatui::widgets::Block::bordered().title("TRANSACTIONS"))
+            .block(
+                ratatui::widgets::Block::bordered()
+                    .title_bottom("TRANSACTIONS")
+                    .title_alignment(Alignment::Center),
+            )
             .row_highlight_style(Style::new().reversed())
             .column_highlight_style(Style::new().red())
             .cell_highlight_style(Style::new().blue())
