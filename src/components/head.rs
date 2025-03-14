@@ -4,12 +4,20 @@ use std::{
 };
 
 use chrono::{DateTime, Utc};
-use color_eyre::Result;
+use color_eyre::{owo_colors::OwoColorize, Result};
+use crossterm::event::KeyCode;
 use ratatui::{prelude::*, widgets::*};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
 use super::Component;
-use crate::{action::Action, config::Config, types::Block};
+use crate::{action::Action, config::Config, tui::Event, types::Block};
+
+#[derive(Default)]
+enum Mode {
+    #[default]
+    Follow,
+    Interactive,
+}
 
 #[derive(Default)]
 pub struct Head {
@@ -17,6 +25,8 @@ pub struct Head {
     config: Config,
     block_rx: Option<UnboundedReceiver<Block>>,
     blocks: VecDeque<Block>,
+    block_idx: usize,
+    mode: Mode,
 }
 
 impl Head {
@@ -39,6 +49,32 @@ impl Component for Head {
         Ok(())
     }
 
+    fn handle_events(&mut self, event: Option<Event>) -> Result<Option<Action>> {
+        if let Some(Event::Key(key_event)) = event {
+            self.block_idx = match key_event.code {
+                KeyCode::Char('j') => {
+                    // TODO: send action for txlist and acclist
+                    self.mode = Mode::Interactive;
+                    self.block_idx
+                        .saturating_add(1)
+                        .min(self.blocks.len().saturating_sub(1))
+                }
+                KeyCode::Char('k') => {
+                    // TODO: send action for txlist and acclist
+                    self.mode = Mode::Interactive;
+                    self.block_idx.saturating_sub(1)
+                }
+                KeyCode::Char('f') => {
+                    // TODO: send action for txlist and acclist
+                    self.mode = Mode::Follow;
+                    0usize
+                }
+                _ => self.block_idx,
+            }
+        }
+        Ok(None)
+    }
+
     fn update(&mut self, action: Action) -> Result<Option<Action>> {
         match action {
             Action::Tick => {
@@ -59,15 +95,21 @@ impl Component for Head {
         let rows: Vec<_> = self
             .blocks
             .iter()
-            .map(|block| {
+            .enumerate()
+            .map(|(i, block)| {
                 let timestamp = UNIX_EPOCH + Duration::from_secs(block.timestamp);
                 let datetime = DateTime::<Utc>::from(timestamp);
                 let timestamp = datetime.format("%Y-%m-%d %H:%M:%S").to_string();
-                Row::new(vec![
+                let row = Row::new(vec![
                     block.number.to_string(),
                     timestamp,
                     block.hash.clone(),
-                ])
+                ]);
+                if i == self.block_idx {
+                    row.red()
+                } else {
+                    row.blue()
+                }
             })
             .collect();
         let widths = [
@@ -84,7 +126,6 @@ impl Component for Head {
             //        // To add space between the header and the rest of the rows, specify the margin
             //        .bottom_margin(1),
             //)
-            // It has an optional footer, which is simply a Row always visible at the bottom.
             //.footer(Row::new(vec!["blockies"]))
             .block(ratatui::widgets::Block::bordered().title("HEAD"))
             .row_highlight_style(Style::new().reversed())
@@ -92,6 +133,7 @@ impl Component for Head {
             .cell_highlight_style(Style::new().blue())
             .highlight_symbol(">>");
         frame.render_widget(table, area);
+
         Ok(())
     }
 }
