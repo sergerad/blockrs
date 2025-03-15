@@ -62,7 +62,7 @@ impl Component for TxList {
                     rows,
                     transactions
                         .first()
-                        .map(|tx| tx.unit.clone())
+                        .map(|tx| tx.unit.clone().to_uppercase())
                         .unwrap_or_default(),
                 )
             } else {
