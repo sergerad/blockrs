@@ -62,7 +62,8 @@ impl Component for Head {
                 if matches!(self.mode, Mode::Follow) {
                     if let Ok(block) = self.block_rx.as_mut().unwrap().try_recv() {
                         self.blocks.push_front(block);
-                        if self.blocks.len() > 10 {
+                        // TODO: parameterize max
+                        if self.blocks.len() > 20 {
                             self.blocks.pop_back();
                         }
                     }

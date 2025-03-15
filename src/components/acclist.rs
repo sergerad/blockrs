@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 
 use color_eyre::Result;
 use ratatui::{prelude::*, widgets::*};
@@ -7,6 +7,7 @@ use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use super::Component;
 use crate::{
     action::Action,
+    app::Mode,
     config::Config,
     types::{Abridged, Account},
 };
@@ -15,12 +16,14 @@ use crate::{
 pub struct AccList {
     command_tx: Option<UnboundedSender<Action>>,
     config: Config,
-    account_rx: Option<UnboundedReceiver<Account>>,
-    accounts: HashMap<String, Account>,
+    account_rx: Option<UnboundedReceiver<Vec<Account>>>,
+    accounts: VecDeque<Vec<Account>>,
+    accounts_idx: usize,
+    mode: Mode,
 }
 
 impl AccList {
-    pub fn new(account_rx: UnboundedReceiver<Account>) -> Self {
+    pub fn new(account_rx: UnboundedReceiver<Vec<Account>>) -> Self {
         Self {
             account_rx: account_rx.into(),
             ..Default::default()
@@ -41,9 +44,30 @@ impl Component for AccList {
 
     fn update(&mut self, action: Action) -> Result<Option<Action>> {
         match action {
+            Action::Down => {
+                self.mode = Mode::Interactive;
+                self.accounts_idx = self
+                    .accounts_idx
+                    .saturating_add(1)
+                    .min(self.accounts.len().saturating_sub(1));
+            }
+            Action::Up => {
+                self.mode = Mode::Interactive;
+                self.accounts_idx = self.accounts_idx.saturating_sub(1);
+            }
+            Action::Follow => {
+                self.mode = Mode::Follow;
+                self.accounts_idx = 0usize;
+            }
             Action::Tick => {
-                while let Ok(account) = self.account_rx.as_mut().unwrap().try_recv() {
-                    self.accounts.insert(account.address.to_string(), account);
+                if matches!(self.mode, Mode::Follow) {
+                    if let Ok(accounts) = self.account_rx.as_mut().unwrap().try_recv() {
+                        self.accounts.push_front(accounts);
+                    }
+                    // TODO: parameterize max
+                    if self.accounts.len() > 20 {
+                        self.accounts.pop_back();
+                    }
                 }
             }
             Action::Render => {}
@@ -53,17 +77,22 @@ impl Component for AccList {
     }
 
     fn draw(&mut self, frame: &mut Frame, area: Rect) -> Result<()> {
-        let rows: Vec<_> = self
-            .accounts
-            .values()
-            .map(|acc| {
-                Row::new(vec![
-                    acc.address.abridged(),
-                    acc.unit.clone(),
-                    acc.balance.clone(),
-                ])
-            })
-            .collect();
+        let rows = {
+            if let Some(accounts) = self.accounts.get(self.accounts_idx) {
+                accounts
+                    .iter()
+                    .map(|acc| {
+                        Row::new(vec![
+                            acc.address.abridged(),
+                            acc.unit.clone(),
+                            acc.balance.clone(),
+                        ])
+                    })
+                    .collect::<Vec<_>>()
+            } else {
+                Vec::new()
+            }
+        };
         let widths = [
             Constraint::Min(11),
             Constraint::Min(5),

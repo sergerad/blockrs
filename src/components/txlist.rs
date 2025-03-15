@@ -65,6 +65,7 @@ impl Component for TxList {
                     if let Ok(transactions) = self.transaction_rx.as_mut().unwrap().try_recv() {
                         if !transactions.is_empty() {
                             self.transactions.push_front(transactions);
+                            // TODO: parameterize max
                             if self.transactions.len() > 20 {
                                 self.transactions.pop_back();
                             }
@@ -83,42 +84,46 @@ impl Component for TxList {
     }
 
     fn draw(&mut self, frame: &mut Frame, area: Rect) -> Result<()> {
-        if let Some(transactions) = self.transactions.get(self.transactions_idx) {
-            let rows: Vec<_> = transactions
-                .iter()
-                .map(|tx| {
-                    Row::new(vec![
-                        tx.hash.clone(),
-                        tx.from.abridged(),
-                        tx.to.abridged(),
-                        tx.value.clone(),
-                    ])
-                })
-                .collect();
-            let widths = [
-                Constraint::Percentage(40),
-                Constraint::Percentage(20),
-                Constraint::Percentage(20),
-                Constraint::Percentage(10),
-            ];
-            let table = Table::new(rows, widths)
-                .column_spacing(2)
-                .style(Style::new().blue())
-                .header(
-                    Row::new(vec!["HASH", "FROM", "TO", &self.value_column_name])
-                        .style(Style::new().bold().italic()),
-                )
-                .block(
-                    ratatui::widgets::Block::bordered()
-                        .title_bottom("TRANSACTIONS")
-                        .title_alignment(Alignment::Center),
-                )
-                .row_highlight_style(Style::new().reversed())
-                .column_highlight_style(Style::new().red())
-                .cell_highlight_style(Style::new().blue())
-                .highlight_symbol(">>");
-            frame.render_widget(table, area);
-        }
+        let rows = {
+            if let Some(transactions) = self.transactions.get(self.transactions_idx) {
+                transactions
+                    .iter()
+                    .map(|tx| {
+                        Row::new(vec![
+                            tx.hash.clone(),
+                            tx.from.abridged(),
+                            tx.to.abridged(),
+                            tx.value.clone(),
+                        ])
+                    })
+                    .collect::<Vec<_>>()
+            } else {
+                Vec::new()
+            }
+        };
+        let widths = [
+            Constraint::Percentage(40),
+            Constraint::Percentage(20),
+            Constraint::Percentage(20),
+            Constraint::Percentage(10),
+        ];
+        let table = Table::new(rows, widths)
+            .column_spacing(2)
+            .style(Style::new().blue())
+            .header(
+                Row::new(vec!["HASH", "FROM", "TO", &self.value_column_name])
+                    .style(Style::new().bold().italic()),
+            )
+            .block(
+                ratatui::widgets::Block::bordered()
+                    .title_bottom("TRANSACTIONS")
+                    .title_alignment(Alignment::Center),
+            )
+            .row_highlight_style(Style::new().reversed())
+            .column_highlight_style(Style::new().red())
+            .cell_highlight_style(Style::new().blue())
+            .highlight_symbol(">>");
+        frame.render_widget(table, area);
         Ok(())
     }
 }
