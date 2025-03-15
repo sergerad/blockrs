@@ -49,10 +49,19 @@ impl Component for Head {
                 blocks
                     .iter()
                     .map(|block| {
+                        let i = self.interact.index;
+                        let indicator = match i {
+                            _i if self.interact.elems.len() == 1 => "  ",
+                            i if i > 0 && i < self.interact.elems.len() - 1 => "▲ ▼",
+                            i if i == 0 && self.interact.elems.len() > 1 => "  ▼",
+                            i if i == self.interact.elems.len() - 1 => "▲  ",
+                            _ => "  ",
+                        };
                         let timestamp = UNIX_EPOCH + Duration::from_secs(block.timestamp);
                         let datetime = DateTime::<Utc>::from(timestamp);
                         let timestamp = datetime.format("%Y-%m-%d %H:%M:%S").to_string();
                         Row::new(vec![
+                            indicator.to_string(),
                             block.number.to_string(),
                             timestamp,
                             block.hash.clone(),
@@ -64,6 +73,7 @@ impl Component for Head {
             }
         };
         let widths = [
+            Constraint::Min(4),
             Constraint::Min(10),
             Constraint::Min(20),
             Constraint::Percentage(100),
