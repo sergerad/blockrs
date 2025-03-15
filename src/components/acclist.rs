@@ -1,5 +1,3 @@
-use std::collections::{HashMap, VecDeque};
-
 use color_eyre::Result;
 use ratatui::{prelude::*, widgets::*};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
@@ -7,25 +5,27 @@ use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 use super::Component;
 use crate::{
     action::Action,
-    app::Mode,
     config::Config,
     types::{Abridged, Account},
 };
+
+use crate::components::interactive::Interactive;
 
 #[derive(Default)]
 pub struct AccList {
     command_tx: Option<UnboundedSender<Action>>,
     config: Config,
-    account_rx: Option<UnboundedReceiver<Vec<Account>>>,
-    accounts: VecDeque<Vec<Account>>,
-    accounts_idx: usize,
-    mode: Mode,
+    interact: Interactive<Account>,
 }
 
 impl AccList {
     pub fn new(account_rx: UnboundedReceiver<Vec<Account>>) -> Self {
         Self {
-            account_rx: account_rx.into(),
+            interact: Interactive {
+                elems_rx: account_rx.into(),
+                limit: 20, // TODO: add to config
+                ..Default::default()
+            },
             ..Default::default()
         }
     }
@@ -43,42 +43,12 @@ impl Component for AccList {
     }
 
     fn update(&mut self, action: Action) -> Result<Option<Action>> {
-        match action {
-            Action::Down => {
-                self.mode = Mode::Interactive;
-                self.accounts_idx = self
-                    .accounts_idx
-                    .saturating_add(1)
-                    .min(self.accounts.len().saturating_sub(1));
-            }
-            Action::Up => {
-                self.mode = Mode::Interactive;
-                self.accounts_idx = self.accounts_idx.saturating_sub(1);
-            }
-            Action::Follow => {
-                self.mode = Mode::Follow;
-                self.accounts_idx = 0usize;
-            }
-            Action::Tick => {
-                if matches!(self.mode, Mode::Follow) {
-                    if let Ok(accounts) = self.account_rx.as_mut().unwrap().try_recv() {
-                        self.accounts.push_front(accounts);
-                    }
-                    // TODO: parameterize max
-                    if self.accounts.len() > 20 {
-                        self.accounts.pop_back();
-                    }
-                }
-            }
-            Action::Render => {}
-            _ => {}
-        }
-        Ok(None)
+        self.interact.update(action)
     }
 
     fn draw(&mut self, frame: &mut Frame, area: Rect) -> Result<()> {
         let rows = {
-            if let Some(accounts) = self.accounts.get(self.accounts_idx) {
+            if let Some(accounts) = self.interact.get() {
                 accounts
                     .iter()
                     .map(|acc| {

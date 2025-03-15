@@ -8,10 +8,10 @@ use tokio::{
 };
 
 pub struct ChainMonitor<P> {
-    block_tx: Sender<Block>,
+    block_tx: Sender<Vec<Block>>,
     transaction_tx: Sender<Vec<Transaction>>,
     account_tx: Sender<Vec<Account>>,
-    block_rx: Option<Receiver<Block>>,
+    block_rx: Option<Receiver<Vec<Block>>>,
     transaction_rx: Option<Receiver<Vec<Transaction>>>,
     account_rx: Option<Receiver<Vec<Account>>>,
     provider: P,
@@ -41,7 +41,7 @@ impl<P> ChainMonitor<P> {
     pub fn receivers(
         &mut self,
     ) -> (
-        Receiver<Block>,
+        Receiver<Vec<Block>>,
         Receiver<Vec<Transaction>>,
         Receiver<Vec<Account>>,
     ) {
@@ -62,7 +62,7 @@ impl<P: ChainProvider + Sync> ChainMonitor<P> {
             let block = self.provider.head().await.unwrap();
             if block.number > head_number {
                 head_number = block.number;
-                self.block_tx.send(block).unwrap();
+                self.block_tx.send(vec![block]).unwrap();
                 let txs = self.provider.transactions().await.unwrap();
                 self.transaction_tx.send(txs).unwrap();
                 let bals = self.provider.balances().await.unwrap();

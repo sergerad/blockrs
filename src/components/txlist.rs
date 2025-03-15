@@ -1,13 +1,10 @@
-use std::collections::VecDeque;
-
 use color_eyre::Result;
 use ratatui::{prelude::*, widgets::*};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
-use super::Component;
+use super::{interactive::Interactive, Component};
 use crate::{
     action::Action,
-    app::Mode,
     config::Config,
     types::{Abridged, Transaction},
 };
@@ -16,17 +13,17 @@ use crate::{
 pub struct TxList {
     command_tx: Option<UnboundedSender<Action>>,
     config: Config,
-    transaction_rx: Option<UnboundedReceiver<Vec<Transaction>>>,
-    transactions: VecDeque<Vec<Transaction>>,
-    transactions_idx: usize,
-    value_column_name: String,
-    mode: Mode,
+    interact: Interactive<Transaction>,
 }
 
 impl TxList {
-    pub fn new(transaction_rx: UnboundedReceiver<Vec<Transaction>>) -> Self {
+    pub fn new(transactions_rx: UnboundedReceiver<Vec<Transaction>>) -> Self {
         Self {
-            transaction_rx: transaction_rx.into(),
+            interact: Interactive {
+                elems_rx: transactions_rx.into(),
+                limit: 20, // TODO: add to config
+                ..Default::default()
+            },
             ..Default::default()
         }
     }
@@ -44,49 +41,13 @@ impl Component for TxList {
     }
 
     fn update(&mut self, action: Action) -> Result<Option<Action>> {
-        match action {
-            Action::Down => {
-                self.mode = Mode::Interactive;
-                self.transactions_idx = self
-                    .transactions_idx
-                    .saturating_add(1)
-                    .min(self.transactions.len().saturating_sub(1));
-            }
-            Action::Up => {
-                self.mode = Mode::Interactive;
-                self.transactions_idx = self.transactions_idx.saturating_sub(1);
-            }
-            Action::Follow => {
-                self.mode = Mode::Follow;
-                self.transactions_idx = 0usize;
-            }
-            Action::Tick => {
-                if matches!(self.mode, Mode::Follow) {
-                    if let Ok(transactions) = self.transaction_rx.as_mut().unwrap().try_recv() {
-                        if !transactions.is_empty() {
-                            self.transactions.push_front(transactions);
-                            // TODO: parameterize max
-                            if self.transactions.len() > 20 {
-                                self.transactions.pop_back();
-                            }
-                            if self.value_column_name.is_empty() {
-                                self.value_column_name =
-                                    self.transactions[0][0].unit.to_uppercase();
-                            }
-                        }
-                    }
-                }
-            }
-            Action::Render => {}
-            _ => {}
-        }
-        Ok(None)
+        self.interact.update(action)
     }
 
     fn draw(&mut self, frame: &mut Frame, area: Rect) -> Result<()> {
-        let rows = {
-            if let Some(transactions) = self.transactions.get(self.transactions_idx) {
-                transactions
+        let (rows, value_col_name) = {
+            if let Some(transactions) = self.interact.get() {
+                let rows = transactions
                     .iter()
                     .map(|tx| {
                         Row::new(vec![
@@ -96,9 +57,16 @@ impl Component for TxList {
                             tx.value.clone(),
                         ])
                     })
-                    .collect::<Vec<_>>()
+                    .collect::<Vec<_>>();
+                (
+                    rows,
+                    transactions
+                        .first()
+                        .map(|tx| tx.unit.clone())
+                        .unwrap_or_default(),
+                )
             } else {
-                Vec::new()
+                (Vec::new(), "".to_string())
             }
         };
         let widths = [
@@ -111,7 +79,7 @@ impl Component for TxList {
             .column_spacing(2)
             .style(Style::new().blue())
             .header(
-                Row::new(vec!["HASH", "FROM", "TO", &self.value_column_name])
+                Row::new(vec!["HASH", "FROM", "TO", value_col_name.as_str()])
                     .style(Style::new().bold().italic()),
             )
             .block(

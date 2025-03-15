@@ -18,14 +18,14 @@ impl Abridged for String {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Block {
     pub number: u64,
     pub hash: String,
     pub timestamp: u64,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Transaction {
     pub hash: String,
     pub from: String,
@@ -34,7 +34,7 @@ pub struct Transaction {
     pub unit: String,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct Account {
     pub address: String,
     pub balance: String,

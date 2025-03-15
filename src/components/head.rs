@@ -1,30 +1,28 @@
-use std::{
-    collections::VecDeque,
-    time::{Duration, UNIX_EPOCH},
-};
+use std::time::{Duration, UNIX_EPOCH};
 
 use chrono::{DateTime, Utc};
 use color_eyre::Result;
 use ratatui::{prelude::*, widgets::*};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
-use super::Component;
-use crate::{action::Action, app::Mode, config::Config, types::Block};
+use super::{interactive::Interactive, Component};
+use crate::{action::Action, config::Config, types::Block};
 
 #[derive(Default)]
 pub struct Head {
     command_tx: Option<UnboundedSender<Action>>,
     config: Config,
-    block_rx: Option<UnboundedReceiver<Block>>,
-    blocks: VecDeque<Block>,
-    block_idx: usize,
-    mode: Mode,
+    interact: Interactive<Block>,
 }
 
 impl Head {
-    pub fn new(block_rx: UnboundedReceiver<Block>) -> Self {
+    pub fn new(block_rx: UnboundedReceiver<Vec<Block>>) -> Self {
         Self {
-            block_rx: block_rx.into(),
+            interact: Interactive {
+                elems_rx: block_rx.into(),
+                limit: 20, // TODO: add config
+                ..Default::default()
+            },
             ..Default::default()
         }
     }
@@ -42,60 +40,29 @@ impl Component for Head {
     }
 
     fn update(&mut self, action: Action) -> Result<Option<Action>> {
-        match action {
-            Action::Down => {
-                self.mode = Mode::Interactive;
-                self.block_idx = self
-                    .block_idx
-                    .saturating_add(1)
-                    .min(self.blocks.len().saturating_sub(1));
-            }
-            Action::Up => {
-                self.mode = Mode::Interactive;
-                self.block_idx = self.block_idx.saturating_sub(1);
-            }
-            Action::Follow => {
-                self.mode = Mode::Follow;
-                self.block_idx = 0usize;
-            }
-            Action::Tick => {
-                if matches!(self.mode, Mode::Follow) {
-                    if let Ok(block) = self.block_rx.as_mut().unwrap().try_recv() {
-                        self.blocks.push_front(block);
-                        // TODO: parameterize max
-                        if self.blocks.len() > 20 {
-                            self.blocks.pop_back();
-                        }
-                    }
-                }
-            }
-            Action::Render => {}
-            _ => {}
-        }
-        Ok(None)
+        self.interact.update(action)
     }
 
     fn draw(&mut self, frame: &mut Frame, area: Rect) -> Result<()> {
-        let rows: Vec<_> = self
-            .blocks
-            .iter()
-            .enumerate()
-            .map(|(i, block)| {
-                let timestamp = UNIX_EPOCH + Duration::from_secs(block.timestamp);
-                let datetime = DateTime::<Utc>::from(timestamp);
-                let timestamp = datetime.format("%Y-%m-%d %H:%M:%S").to_string();
-                let row = Row::new(vec![
-                    block.number.to_string(),
-                    timestamp,
-                    block.hash.clone(),
-                ]);
-                if i == self.block_idx {
-                    row.white()
-                } else {
-                    row.blue()
-                }
-            })
-            .collect();
+        let rows = {
+            if let Some(blocks) = self.interact.get() {
+                blocks
+                    .iter()
+                    .map(|block| {
+                        let timestamp = UNIX_EPOCH + Duration::from_secs(block.timestamp);
+                        let datetime = DateTime::<Utc>::from(timestamp);
+                        let timestamp = datetime.format("%Y-%m-%d %H:%M:%S").to_string();
+                        Row::new(vec![
+                            block.number.to_string(),
+                            timestamp,
+                            block.hash.clone(),
+                        ])
+                    })
+                    .collect::<Vec<_>>()
+            } else {
+                Vec::new()
+            }
+        };
         let widths = [
             Constraint::Min(10),
             Constraint::Min(20),
