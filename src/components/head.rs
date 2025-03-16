@@ -58,7 +58,7 @@ impl Component for Head {
                         };
                         let timestamp = UNIX_EPOCH + Duration::from_secs(block.timestamp);
                         let datetime = DateTime::<Utc>::from(timestamp);
-                        let timestamp = datetime.format("%Y-%m-%d %H:%M:%S").to_string();
+                        let timestamp = datetime.format("%H:%M:%S").to_string();
                         Row::new(vec![
                             indicator.to_string(),
                             block.number.to_string(),
@@ -74,7 +74,7 @@ impl Component for Head {
         let widths = [
             Constraint::Min(14),
             Constraint::Min(10),
-            Constraint::Min(20),
+            Constraint::Min(10),
             Constraint::Percentage(100),
         ];
         let title = match self.interact.mode {
