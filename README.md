@@ -34,12 +34,9 @@ If you hit `j/k/Up/Down` at any time, the app will stop following head and allow
 
 To re-enter follow mode, hit `f/Space/Enter`.
 
-```
-
 ## Roadmap
 
 The following features are required for 1.0:
 
-1. Interactive mode (stop tail, select block)
+1. ~Interactive mode (stop tail, select block)~
 2. Add implementations for other `ChainProvider` instances beyond Ethereum RPC
-```
