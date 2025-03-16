@@ -24,6 +24,7 @@ addresses:
 EOF
 export BLOCKRS_CONFIG=/tmp/
 blockrs https://rpc.flashbots.net
+```
 
 ### User Input
 
@@ -41,3 +42,4 @@ The following features are required for 1.0:
 
 1. Interactive mode (stop tail, select block)
 2. Add implementations for other `ChainProvider` instances beyond Ethereum RPC
+```
