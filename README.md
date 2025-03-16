@@ -2,9 +2,6 @@
 
 Blockrs is a TUI for observing chain data.
 
-> [!WARNING]  
-> Project is WIP. Published to crates.io for name reservation at this stage.
-
 ![alt text](https://github.com/sergerad/blockrs/blob/main/image.png?raw=true)
 
 ## Usage
