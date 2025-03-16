@@ -6,7 +6,7 @@ use ratatui::{prelude::*, widgets::*};
 use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
 
 use super::{interactive::Interactive, Component};
-use crate::{action::Action, config::Config, types::Block};
+use crate::{action::Action, app::Mode, config::Config, types::Block};
 
 #[derive(Default)]
 pub struct Head {
@@ -49,12 +49,11 @@ impl Component for Head {
                 blocks
                     .iter()
                     .map(|block| {
-                        let i = self.interact.index;
-                        let indicator = match i {
-                            _i if self.interact.elems.len() == 1 => "  ",
-                            i if i > 0 && i < self.interact.elems.len() - 1 => "▲ ▼",
-                            i if i == 0 && self.interact.elems.len() > 1 => "  ▼",
-                            i if i == self.interact.elems.len() - 1 => "▲  ",
+                        let indicator = match self.interact.index {
+                            _i if self.interact.elems.len() == 1 => "           ",
+                            i if i > 0 && i < self.interact.elems.len() - 1 => "▲ NEXT ▼ PREV",
+                            i if i == 0 && self.interact.elems.len() > 1 => "     ▼ PREV",
+                            i if i == self.interact.elems.len() - 1 => "▲ NEXT       ",
                             _ => "  ",
                         };
                         let timestamp = UNIX_EPOCH + Duration::from_secs(block.timestamp);
@@ -73,11 +72,15 @@ impl Component for Head {
             }
         };
         let widths = [
-            Constraint::Min(4),
+            Constraint::Min(14),
             Constraint::Min(10),
             Constraint::Min(20),
             Constraint::Percentage(100),
         ];
+        let title = match self.interact.mode {
+            Mode::Follow => "HEAD",
+            Mode::Interactive => "PAUSED",
+        };
         let table = Table::new(rows, widths)
             .column_spacing(2)
             .style(Style::new().blue())
@@ -88,7 +91,7 @@ impl Component for Head {
             //        .bottom_margin(1),
             //)
             //.footer(Row::new(vec!["blockies"]))
-            .block(ratatui::widgets::Block::bordered().title("HEAD"))
+            .block(ratatui::widgets::Block::bordered().title(title))
             .row_highlight_style(Style::new().reversed())
             .column_highlight_style(Style::new().red())
             .cell_highlight_style(Style::new().blue())

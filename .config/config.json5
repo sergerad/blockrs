@@ -9,8 +9,12 @@
       "<Ctrl-c>": "Quit",
       "<Ctrl-z>": "Suspend",
       "<j>": "Down",
+      "<Down>": "Down",
       "<k>": "Up",
+      "<Up>": "Up",
       "<f>": "Follow",
+      "<Enter>": "Follow",
+      "<Space>": "Follow",
     },
   }
 }
