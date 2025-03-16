@@ -24,6 +24,15 @@ addresses:
 EOF
 export BLOCKRS_CONFIG=/tmp/
 blockrs https://rpc.flashbots.net
+
+### User Input
+
+The app will run in a mode which follows the HEAD of the chain by default.
+
+If you hit `j/k/Up/Down` at any time, the app will stop following head and allow you to observe any previously-processed block.
+
+To re-enter follow mode, hit `f/Space/Enter`.
+
 ```
 
 ## Roadmap
