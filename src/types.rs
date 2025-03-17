@@ -1,5 +1,14 @@
 use std::fmt::Debug;
 
+use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+
+pub type BlockSender = UnboundedSender<Vec<Block>>;
+pub type TransactionSender = UnboundedSender<Vec<Transaction>>;
+pub type AccountSender = UnboundedSender<Vec<Account>>;
+pub type BlockReceiver = UnboundedReceiver<Vec<Block>>;
+pub type TransactionReceiver = UnboundedReceiver<Vec<Transaction>>;
+pub type AccountReceiver = UnboundedReceiver<Vec<Account>>;
+
 /// Contains the chain-agnostic data required to represent a block in the UI.
 #[derive(Debug, Clone, Default)]
 pub struct Block {
@@ -15,7 +24,7 @@ pub struct Transaction {
     pub from: String,
     pub to: String,
     pub value: String,
-    pub unit: String,
+    pub units: String,
 }
 
 /// Contains the chain-agnostic data required to represent an account block in the UI.
@@ -23,7 +32,7 @@ pub struct Transaction {
 pub struct Account {
     pub address: String,
     pub balance: String,
-    pub unit: String,
+    pub units: String,
 }
 
 /// Produces a shortened `String` representation of some type.

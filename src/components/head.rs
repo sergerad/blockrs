@@ -3,10 +3,17 @@ use std::time::{Duration, UNIX_EPOCH};
 use chrono::{DateTime, Utc};
 use color_eyre::Result;
 use ratatui::{prelude::*, widgets::*};
-use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+use tokio::sync::mpsc::UnboundedSender;
 
-use super::{interactive::Interactive, Component};
-use crate::{action::Action, app::Mode, config::Config, types::Block};
+use super::{
+    interactive::{Interactive, Mode},
+    Component,
+};
+use crate::{
+    action::Action,
+    config::Config,
+    types::{Block, BlockReceiver},
+};
 
 #[derive(Default)]
 pub struct Head {
@@ -16,7 +23,7 @@ pub struct Head {
 }
 
 impl Head {
-    pub fn new(block_rx: UnboundedReceiver<Vec<Block>>) -> Self {
+    pub fn new(block_rx: BlockReceiver) -> Self {
         Self {
             interact: Interactive {
                 elems_rx: block_rx.into(),

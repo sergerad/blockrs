@@ -26,8 +26,6 @@ use tokio::{
 use tokio_util::sync::CancellationToken;
 use tracing::error;
 
-use crate::app::Mode;
-
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub enum Event {
     Init,
@@ -42,7 +40,6 @@ pub enum Event {
     Key(KeyEvent),
     Mouse(MouseEvent),
     Resize(u16, u16),
-    ModeChange(Mode),
 }
 
 pub struct Tui {

@@ -1,12 +1,21 @@
-use crate::{action::Action, app::Mode};
+use crate::action::Action;
 use color_eyre::Result;
 use std::collections::VecDeque;
 use tokio::sync::mpsc::UnboundedReceiver;
 
+#[derive(Default, Clone, Debug)]
+pub enum Mode {
+    #[default]
+    Follow,
+    Interactive,
+}
+
+type Receiver<T> = UnboundedReceiver<Vec<T>>;
+
 #[derive(Default)]
 pub struct Interactive<T> {
     pub limit: usize,
-    pub elems_rx: Option<UnboundedReceiver<Vec<T>>>,
+    pub elems_rx: Option<Receiver<T>>,
     pub elems: VecDeque<Vec<T>>,
     pub index: usize,
     pub mode: Mode,

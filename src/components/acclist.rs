@@ -1,12 +1,12 @@
 use color_eyre::Result;
 use ratatui::{prelude::*, widgets::*};
-use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+use tokio::sync::mpsc::UnboundedSender;
 
 use super::Component;
 use crate::{
     action::Action,
     config::Config,
-    types::{Abridged, Account},
+    types::{Abridged, Account, AccountReceiver},
 };
 
 use crate::components::interactive::Interactive;
@@ -19,7 +19,7 @@ pub struct AccList {
 }
 
 impl AccList {
-    pub fn new(account_rx: UnboundedReceiver<Vec<Account>>) -> Self {
+    pub fn new(account_rx: AccountReceiver) -> Self {
         Self {
             interact: Interactive {
                 elems_rx: account_rx.into(),
@@ -54,7 +54,7 @@ impl Component for AccList {
                     .map(|acc| {
                         Row::new(vec![
                             acc.address.abridged(),
-                            acc.unit.clone(),
+                            acc.units.clone(),
                             acc.balance.clone(),
                         ])
                     })
@@ -71,12 +71,6 @@ impl Component for AccList {
         let table = Table::new(rows, widths)
             .column_spacing(2)
             .style(Style::new().green())
-            //.header(
-            //    Row::new(vec!["addr", "balance", "units"])
-            //        .style(Style::new().bold())
-            //        // To add space between the header and the rest of the rows, specify the margin
-            //        .bottom_margin(1),
-            //)
             .block(
                 ratatui::widgets::Block::bordered()
                     .title("BALANCES")

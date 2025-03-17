@@ -76,7 +76,7 @@ impl ChainProvider for EthProvider {
                 .unwrap()
                 .iter()
                 .map(|tx| Transaction {
-                    unit: "gwei".to_string(),
+                    units: "gwei".to_string(),
                     value: format_units(tx.inner.value(), "gwei").unwrap(),
                     hash: tx.inner.tx_hash().to_string(),
                     from: tx.inner.signer().to_string(),
@@ -106,7 +106,7 @@ impl ChainProvider for EthProvider {
             accounts.push(Account {
                 balance: gwei,
                 address: addr.to_string(),
-                unit: "gwei".to_string(),
+                units: "gwei".to_string(),
             });
         }
         Ok(accounts)

@@ -31,13 +31,6 @@ pub struct App<P> {
     monitor: Option<ChainMonitor<P>>,
 }
 
-#[derive(Default, Clone, Debug, Serialize, Deserialize)]
-pub enum Mode {
-    #[default]
-    Follow,
-    Interactive,
-}
-
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum Setting {
     #[default]

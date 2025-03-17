@@ -1,19 +1,19 @@
 use std::time::Duration;
 
 use crate::providers::ChainProvider;
-use crate::types::{Account, Block, Transaction};
-use tokio::{
-    sync::mpsc::{unbounded_channel, UnboundedReceiver as Receiver, UnboundedSender as Sender},
-    time::interval,
+use crate::types::{
+    AccountReceiver, AccountSender, BlockReceiver, BlockSender, TransactionReceiver,
+    TransactionSender,
 };
+use tokio::{sync::mpsc::unbounded_channel, time::interval};
 
 pub struct ChainMonitor<P> {
-    block_tx: Sender<Vec<Block>>,
-    transaction_tx: Sender<Vec<Transaction>>,
-    account_tx: Sender<Vec<Account>>,
-    block_rx: Option<Receiver<Vec<Block>>>,
-    transaction_rx: Option<Receiver<Vec<Transaction>>>,
-    account_rx: Option<Receiver<Vec<Account>>>,
+    block_tx: BlockSender,
+    transaction_tx: TransactionSender,
+    account_tx: AccountSender,
+    block_rx: Option<BlockReceiver>,
+    transaction_rx: Option<TransactionReceiver>,
+    account_rx: Option<AccountReceiver>,
     provider: P,
 }
 
@@ -38,13 +38,7 @@ impl<P> ChainMonitor<P> {
     /// # Panics
     ///
     /// ...
-    pub fn receivers(
-        &mut self,
-    ) -> (
-        Receiver<Vec<Block>>,
-        Receiver<Vec<Transaction>>,
-        Receiver<Vec<Account>>,
-    ) {
+    pub fn receivers(&mut self) -> (BlockReceiver, TransactionReceiver, AccountReceiver) {
         (
             self.block_rx.take().unwrap(),
             self.transaction_rx.take().unwrap(),

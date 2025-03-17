@@ -1,12 +1,12 @@
 use color_eyre::Result;
 use ratatui::{prelude::*, widgets::*};
-use tokio::sync::mpsc::{UnboundedReceiver, UnboundedSender};
+use tokio::sync::mpsc::UnboundedSender;
 
 use super::{interactive::Interactive, Component};
 use crate::{
     action::Action,
     config::Config,
-    types::{Abridged, Transaction},
+    types::{Abridged, Transaction, TransactionReceiver},
 };
 
 #[derive(Default)]
@@ -17,7 +17,7 @@ pub struct TxList {
 }
 
 impl TxList {
-    pub fn new(transactions_rx: UnboundedReceiver<Vec<Transaction>>) -> Self {
+    pub fn new(transactions_rx: TransactionReceiver) -> Self {
         Self {
             interact: Interactive {
                 elems_rx: transactions_rx.into(),
@@ -62,7 +62,7 @@ impl Component for TxList {
                     rows,
                     transactions
                         .first()
-                        .map(|tx| tx.unit.clone().to_uppercase())
+                        .map(|tx| tx.units.clone().to_uppercase())
                         .unwrap_or_default(),
                 )
             } else {
