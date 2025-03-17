@@ -39,9 +39,9 @@ pub enum Setting {
 
 impl<P: ChainProvider + Send + Sync + 'static> App<P> {
     pub fn new(tick_rate: f64, frame_rate: f64, provider: P) -> Result<Self> {
-        let (action_tx, action_rx) = mpsc::unbounded_channel();
         let mut monitor = ChainMonitor::new(provider);
         let (block_rx, transaction_rx, account_rx) = monitor.receivers();
+        let (action_tx, action_rx) = mpsc::unbounded_channel();
         Ok(Self {
             tick_rate,
             frame_rate,
@@ -79,7 +79,7 @@ impl<P: ChainProvider + Send + Sync + 'static> App<P> {
 
         // Run chain provider loop.
         let mut monitor = self.monitor.take().unwrap();
-        let tick_rate = self.config.config.tick_rate;
+        let tick_rate = self.config.app.tick_rate;
         tokio::task::spawn(async move {
             monitor.run(tick_rate).await;
         });
@@ -93,7 +93,6 @@ impl<P: ChainProvider + Send + Sync + 'static> App<P> {
                 tui.suspend()?;
                 action_tx.send(Action::Resume)?;
                 action_tx.send(Action::ClearScreen)?;
-                // tui.mouse(true);
                 tui.enter()?;
             } else if self.should_quit {
                 tui.stop()?;

@@ -1,5 +1,3 @@
-#![allow(dead_code)] // Remove this once you start using the code
-
 use std::{collections::HashMap, env, path::PathBuf, time::Duration};
 
 use color_eyre::Result;
@@ -19,10 +17,6 @@ const CONFIG: &str = include_str!("../.config/config.json5");
 #[derive(Clone, Debug, Deserialize, Default)]
 pub struct AppConfig {
     #[serde(default)]
-    pub data_dir: PathBuf,
-    #[serde(default)]
-    pub config_dir: PathBuf,
-    #[serde(default)]
     pub addresses: Vec<String>,
     #[serde(default, deserialize_with = "deserialize_duration")]
     pub tick_rate: Duration,
@@ -31,7 +25,7 @@ pub struct AppConfig {
 #[derive(Clone, Debug, Default, Deserialize)]
 pub struct Config {
     #[serde(default, flatten)]
-    pub config: AppConfig,
+    pub app: AppConfig,
     #[serde(default)]
     pub keybindings: KeyBindings,
     #[serde(default)]
@@ -79,8 +73,7 @@ impl Config {
         let mut cfg: Self = builder.build()?.try_deserialize()?;
         if !found_config {
             error!("No configuration file found. Application may not behave as expected");
-            cfg.config.tick_rate = default_config.config.tick_rate;
-            cfg.config.addresses = default_config.config.addresses;
+            cfg = default_config.clone();
         }
 
         for (mode, default_bindings) in default_config.keybindings.iter() {
@@ -234,6 +227,7 @@ fn parse_key_code_with_modifiers(
     Ok(KeyEvent::new(c, modifiers))
 }
 
+#[allow(dead_code)]
 pub fn key_event_to_string(key_event: &KeyEvent) -> String {
     let char;
     let key_code = match key_event.code {

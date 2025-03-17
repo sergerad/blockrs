@@ -22,7 +22,7 @@ impl EthProvider {
     pub fn new(url: Url) -> Result<Self, ConfigError> {
         let config = Config::new()?;
         let addrs: Vec<_> = config
-            .config
+            .app
             .addresses
             .iter()
             .map(|addr| AlloyAddress::from_str(addr.as_str()).unwrap())

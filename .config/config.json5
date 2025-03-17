@@ -3,6 +3,7 @@
     "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
   ],
   "tick_rate": "2s",
+  "block_capacity": 1000,
   "keybindings": {
     "Default": {
       "<q>": "Quit",

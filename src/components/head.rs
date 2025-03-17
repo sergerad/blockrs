@@ -27,7 +27,6 @@ impl Head {
         Self {
             interact: Interactive {
                 elems_rx: block_rx.into(),
-                limit: 20, // TODO: add config
                 ..Default::default()
             },
             ..Default::default()

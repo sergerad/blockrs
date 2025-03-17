@@ -23,7 +23,6 @@ impl AccList {
         Self {
             interact: Interactive {
                 elems_rx: account_rx.into(),
-                limit: 20, // TODO: add to config
                 ..Default::default()
             },
             ..Default::default()

@@ -3,6 +3,10 @@ use color_eyre::Result;
 use std::collections::VecDeque;
 use tokio::sync::mpsc::UnboundedReceiver;
 
+/// The maximum number of list elements that can be stored interactive components
+/// at any moment in time.
+const LIMIT: usize = 1000;
+
 #[derive(Default, Clone, Debug)]
 pub enum Mode {
     #[default]
@@ -14,7 +18,6 @@ type Receiver<T> = UnboundedReceiver<Vec<T>>;
 
 #[derive(Default)]
 pub struct Interactive<T> {
-    pub limit: usize,
     pub elems_rx: Option<Receiver<T>>,
     pub elems: VecDeque<Vec<T>>,
     pub index: usize,
@@ -47,7 +50,7 @@ impl<T> Interactive<T> {
                     if let Ok(elems) = self.elems_rx.as_mut().unwrap().try_recv() {
                         self.elems.push_front(elems);
                     }
-                    if self.elems.len() > self.limit {
+                    if self.elems.len() > LIMIT {
                         self.elems.pop_back();
                     }
                 }
