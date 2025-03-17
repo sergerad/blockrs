@@ -997,6 +997,7 @@ dependencies = [
  "crossterm",
  "derive_deref",
  "directories",
+ "duration-str",
  "futures",
  "human-panic",
  "json5",
@@ -1703,6 +1704,20 @@ name = "dunce"
 version = "1.0.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "92773504d58c093f6de2459af4af33faa518c13451eb8f2b5698ed3d36e7c813"
+
+[[package]]
+name = "duration-str"
+version = "0.16.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "5edd16e9a9d5022b1ebc6ff96eb31eed3233a1b186a52b7ebe4c59483377ab40"
+dependencies = [
+ "chrono",
+ "rust_decimal",
+ "serde",
+ "thiserror 2.0.12",
+ "time",
+ "winnow 0.7.3",
+]
 
 [[package]]
 name = "ecdsa"
@@ -4098,6 +4113,16 @@ checksum = "3e0698206bcb8882bf2a9ecb4c1e7785db57ff052297085a6efd4fe42302068a"
 dependencies = [
  "cfg-if",
  "ordered-multimap",
+]
+
+[[package]]
+name = "rust_decimal"
+version = "1.36.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b082d80e3e3cc52b2ed634388d436fe1f4de6af5786cc2de9ba9737527bdf555"
+dependencies = [
+ "arrayvec",
+ "num-traits",
 ]
 
 [[package]]

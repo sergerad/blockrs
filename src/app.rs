@@ -63,7 +63,6 @@ impl<P: ChainProvider + Send + Sync + 'static> App<P> {
 
     pub async fn run(&mut self) -> Result<()> {
         let mut tui = Tui::new()?
-            // .mouse(true) // uncomment this line to enable mouse support
             .tick_rate(self.tick_rate)
             .frame_rate(self.frame_rate);
         tui.enter()?;
@@ -78,11 +77,15 @@ impl<P: ChainProvider + Send + Sync + 'static> App<P> {
             component.init(tui.size()?)?;
         }
 
-        let action_tx = self.action_tx.clone();
+        // Run chain provider loop.
         let mut monitor = self.monitor.take().unwrap();
+        let tick_rate = self.config.config.tick_rate;
         tokio::task::spawn(async move {
-            monitor.run().await;
+            monitor.run(tick_rate).await;
         });
+
+        // Run main app loop.
+        let action_tx = self.action_tx.clone();
         loop {
             self.handle_events(&mut tui).await?;
             self.handle_actions(&mut tui)?;

@@ -1,11 +1,12 @@
 #![allow(dead_code)] // Remove this once you start using the code
 
-use std::{collections::HashMap, env, path::PathBuf};
+use std::{collections::HashMap, env, path::PathBuf, time::Duration};
 
 use color_eyre::Result;
 use crossterm::event::{KeyCode, KeyEvent, KeyModifiers};
 use derive_deref::{Deref, DerefMut};
 use directories::ProjectDirs;
+use duration_str::deserialize_duration;
 use lazy_static::lazy_static;
 use ratatui::style::{Color, Modifier, Style};
 use serde::{de::Deserializer, Deserialize};
@@ -23,6 +24,8 @@ pub struct AppConfig {
     pub config_dir: PathBuf,
     #[serde(default)]
     pub addresses: Vec<String>,
+    #[serde(default, deserialize_with = "deserialize_duration")]
+    pub tick_rate: Duration,
 }
 
 #[derive(Clone, Debug, Default, Deserialize)]
@@ -73,11 +76,12 @@ impl Config {
                 found_config = true
             }
         }
+        let mut cfg: Self = builder.build()?.try_deserialize()?;
         if !found_config {
             error!("No configuration file found. Application may not behave as expected");
+            cfg.config.tick_rate = default_config.config.tick_rate;
+            cfg.config.addresses = default_config.config.addresses;
         }
-
-        let mut cfg: Self = builder.build()?.try_deserialize()?;
 
         for (mode, default_bindings) in default_config.keybindings.iter() {
             let user_bindings = cfg.keybindings.entry(*mode).or_default();

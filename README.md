@@ -16,6 +16,7 @@ If you want to watch account balances, you need to provide a list via the config
 
 ```
 cat <<EOF > /tmp/config.yaml
+tick_rate: 5s
 addresses:
   - 0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045
 EOF

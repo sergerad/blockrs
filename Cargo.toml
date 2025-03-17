@@ -17,6 +17,7 @@ include = ["**/*.rs", "Cargo.toml", ".config/*"]
 
 [dependencies]
 better-panic = "0.3.0"
+duration-str = "0.16"
 chrono = "0.4"
 clap = { version = "4.5.20", features = [
   "derive",

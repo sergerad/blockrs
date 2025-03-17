@@ -48,8 +48,8 @@ impl<P> ChainMonitor<P> {
 }
 
 impl<P: ChainProvider + Sync> ChainMonitor<P> {
-    pub async fn run(&mut self) {
-        let mut tick_interval = interval(Duration::from_secs(2));
+    pub async fn run(&mut self, tick_rate: Duration) {
+        let mut tick_interval = interval(tick_rate);
         let mut head_number = 0u64;
         loop {
             tick_interval.tick().await;
