@@ -1,13 +1,12 @@
-use color_eyre::Result;
-use ratatui::{prelude::*, widgets::*};
-use tokio::sync::mpsc::UnboundedSender;
-
 use super::{interactive::Interactive, Component};
 use crate::{
     action::Action,
     config::Config,
     types::{Abridged, Transaction, TransactionReceiver},
 };
+use color_eyre::Result;
+use ratatui::{prelude::*, widgets::*};
+use tokio::sync::mpsc::UnboundedSender;
 
 #[derive(Default)]
 pub struct TxList {
@@ -44,8 +43,11 @@ impl Component for TxList {
     }
 
     fn draw(&mut self, frame: &mut Frame, area: Rect) -> Result<()> {
+        // Map the relevant list of transactions to rows and get units name for value column.
         let (rows, value_col_name) = {
+            // Get the list of transactions currently pointed to.
             if let Some(transactions) = self.interact.get() {
+                // Map transactions to rows.
                 let rows = transactions
                     .iter()
                     .map(|tx| {
@@ -57,6 +59,7 @@ impl Component for TxList {
                         ])
                     })
                     .collect::<Vec<_>>();
+                // Return rows and units name for the value column.
                 (
                     rows,
                     transactions
@@ -68,11 +71,13 @@ impl Component for TxList {
                 (Vec::new(), "".to_string())
             }
         };
+
+        // Construct the accounts table.
         let widths = [
-            Constraint::Percentage(40),
-            Constraint::Percentage(20),
-            Constraint::Percentage(20),
-            Constraint::Percentage(10),
+            Constraint::Percentage(40), // Hash.
+            Constraint::Percentage(20), // From.
+            Constraint::Percentage(20), // To.
+            Constraint::Percentage(10), // Value.
         ];
         let table = Table::new(rows, widths)
             .column_spacing(2)
@@ -90,6 +95,8 @@ impl Component for TxList {
             .column_highlight_style(Style::new().red())
             .cell_highlight_style(Style::new().blue())
             .highlight_symbol(">>");
+
+        // Render.
         frame.render_widget(table, area);
         Ok(())
     }

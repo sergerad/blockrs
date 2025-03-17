@@ -1,15 +1,13 @@
-use color_eyre::Result;
-use ratatui::{prelude::*, widgets::*};
-use tokio::sync::mpsc::UnboundedSender;
-
 use super::Component;
+use crate::components::interactive::Interactive;
 use crate::{
     action::Action,
     config::Config,
     types::{Abridged, Account, AccountReceiver},
 };
-
-use crate::components::interactive::Interactive;
+use color_eyre::Result;
+use ratatui::{prelude::*, widgets::*};
+use tokio::sync::mpsc::UnboundedSender;
 
 #[derive(Default)]
 pub struct AccList {
@@ -46,8 +44,11 @@ impl Component for AccList {
     }
 
     fn draw(&mut self, frame: &mut Frame, area: Rect) -> Result<()> {
+        // Map the relevant list of accounts to rows.
         let rows = {
+            // Get the list of accounts currently pointed to.
             if let Some(accounts) = self.interact.get() {
+                // Map accounts to rows.
                 accounts
                     .iter()
                     .map(|acc| {
@@ -62,10 +63,12 @@ impl Component for AccList {
                 Vec::new()
             }
         };
+
+        // Construct the accounts table.
         let widths = [
-            Constraint::Min(11),
-            Constraint::Min(5),
-            Constraint::Percentage(100),
+            Constraint::Min(11),         // Address.
+            Constraint::Min(5),          // Units.
+            Constraint::Percentage(100), // Balance.
         ];
         let table = Table::new(rows, widths)
             .column_spacing(2)
@@ -79,6 +82,8 @@ impl Component for AccList {
             .column_highlight_style(Style::new().red())
             .cell_highlight_style(Style::new().blue())
             .highlight_symbol(">>");
+
+        // Render.
         frame.render_widget(table, area);
         Ok(())
     }

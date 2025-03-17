@@ -1,10 +1,3 @@
-use std::time::{Duration, UNIX_EPOCH};
-
-use chrono::{DateTime, Utc};
-use color_eyre::Result;
-use ratatui::{prelude::*, widgets::*};
-use tokio::sync::mpsc::UnboundedSender;
-
 use super::{
     interactive::{Interactive, Mode},
     Component,
@@ -14,6 +7,11 @@ use crate::{
     config::Config,
     types::{Block, BlockReceiver},
 };
+use chrono::{DateTime, Utc};
+use color_eyre::Result;
+use ratatui::{prelude::*, widgets::*};
+use std::time::{Duration, UNIX_EPOCH};
+use tokio::sync::mpsc::UnboundedSender;
 
 #[derive(Default)]
 pub struct Head {
@@ -50,17 +48,22 @@ impl Component for Head {
     }
 
     fn draw(&mut self, frame: &mut Frame, area: Rect) -> Result<()> {
+        // Map the latest head block to a row.
         let rows = {
+            // Get the list of blocks (always single block).
             if let Some(blocks) = self.interact.get() {
+                // Map blocks to rows.
                 blocks
                     .iter()
                     .map(|block| {
+                        // Construct up/down indicator based on currently-highlighted
+                        // block's position in the list of all blocks observed so far.
                         let indicator = match self.interact.index {
                             _i if self.interact.elems.len() == 1 => "           ",
                             i if i > 0 && i < self.interact.elems.len() - 1 => "▲ NEXT ▼ PREV",
                             i if i == 0 && self.interact.elems.len() > 1 => "     ▼ PREV",
                             i if i == self.interact.elems.len() - 1 => "▲ NEXT       ",
-                            _ => "  ",
+                            _ => "           ",
                         };
                         let timestamp = UNIX_EPOCH + Duration::from_secs(block.timestamp);
                         let datetime = DateTime::<Utc>::from(timestamp);
@@ -77,11 +80,13 @@ impl Component for Head {
                 Vec::new()
             }
         };
+
+        // Construct the table.
         let widths = [
-            Constraint::Min(14),
-            Constraint::Min(10),
-            Constraint::Min(10),
-            Constraint::Percentage(100),
+            Constraint::Min(14),         // Indicator.
+            Constraint::Min(10),         // Block number.
+            Constraint::Min(10),         // Timestamp.
+            Constraint::Percentage(100), // Hash.
         ];
         let title = match self.interact.mode {
             Mode::Follow => "HEAD",
@@ -90,20 +95,14 @@ impl Component for Head {
         let table = Table::new(rows, widths)
             .column_spacing(2)
             .style(Style::new().blue())
-            //.header(
-            //    Row::new(vec!["number", "hash", "time"])
-            //        .style(Style::new().bold())
-            //        // To add space between the header and the rest of the rows, specify the margin
-            //        .bottom_margin(1),
-            //)
-            //.footer(Row::new(vec!["blockies"]))
             .block(ratatui::widgets::Block::bordered().title(title))
             .row_highlight_style(Style::new().reversed())
             .column_highlight_style(Style::new().red())
             .cell_highlight_style(Style::new().blue())
             .highlight_symbol(">>");
-        frame.render_widget(table, area);
 
+        // Render.
+        frame.render_widget(table, area);
         Ok(())
     }
 }
