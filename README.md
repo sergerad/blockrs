@@ -38,3 +38,7 @@ The following features are required for 1.0:
 
 1. ~Interactive mode (stop tail, select block)~
 2. Add implementations for other `ChainProvider` instances beyond Ethereum RPC
+
+## Acknowledgements
+
+[Ratatui](https://ratatui.rs/) is a fantastic crate for creating TUI applications in Rust. This project is based on its template found [here](https://ratatui.rs/templates/).
