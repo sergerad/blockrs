@@ -4,6 +4,15 @@ Blockrs is a TUI for observing chain data.
 
 ![alt text](https://github.com/sergerad/blockrs/blob/main/image.png?raw=true)
 
+## Installation
+
+Use cargo to install the [crate](https://crates.io/crates/blockrs):
+
+```
+cargo install blockrs
+blockrs -h
+```
+
 ## Usage
 
 Currently only supports Ethereum RPC:

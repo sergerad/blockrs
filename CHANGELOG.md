@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Add `tick_rate` config parameter to control `ChainProvider` RPC request rate.
+
 ## v0.2.0
 
 ### Enhancements
