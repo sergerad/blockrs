@@ -63,16 +63,28 @@ impl From<&AlloyBlock> for Block {
 impl ChainProvider for EthProvider {
     type Error = EthProviderError;
 
+    /// Queries for the head of the chain and returns data pertaining to it
+    /// that is relevant for the UI.
     async fn head(&mut self) -> Result<Block, Self::Error> {
+        // Get the latest block.
         let block = self.provider.get_block(BlockId::latest()).full().await?;
         let block = block.ok_or(EthProviderError::NoHead)?;
+
+        // Convert to block types required by the UI.
         let result_block = (&block).into();
+
+        // Keep track of latest block.
         self.head = block.into();
+
+        // Return the block.
         Ok(result_block)
     }
 
+    /// Returns transactions pertaining to the latest block retrieved from the chain.
     async fn transactions(&self) -> Result<Vec<Transaction>, Self::Error> {
         if let Some(block) = &self.head {
+            // Map the transactions in latest block to transaction types
+            // required by the UI.
             let txs: Vec<_> = block
                 .transactions
                 .as_transactions()
@@ -96,12 +108,17 @@ impl ChainProvider for EthProvider {
         }
     }
 
+    /// Retrieves balances pertaining to the latest block or the last
+    /// block previously retrieved, if there is one.
     async fn balances(&self) -> Result<Vec<Account>, Self::Error> {
+        // Use last retrieved block if there is one. Latest otherwise.
         let block = self
             .head
             .as_ref()
             .map(|b| BlockId::from(b.header.number))
             .unwrap_or(BlockId::latest());
+
+        // Map the accounts to UI data elements.
         let mut accounts = Vec::new();
         for addr in &self.addrs {
             let bal = self.provider.get_balance(*addr).block_id(block).await?;
@@ -115,6 +132,7 @@ impl ChainProvider for EthProvider {
     }
 }
 
+/// Formats a U256 into gwei string.
 fn gwei(num: Uint<256, 4>) -> String {
     format_units(num, "gwei").expect("gwei is valid unit format")
 }
