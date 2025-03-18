@@ -77,3 +77,65 @@ impl<T> Interactive<T> {
         Ok(None)
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use tokio::sync::mpsc::unbounded_channel;
+
+    use crate::action::Action;
+
+    use super::Interactive;
+
+    #[test]
+    fn update_without_elements() {
+        let mut interact = Interactive::<usize>::default();
+        assert!(interact.get().is_none());
+        interact.update(Action::Down).unwrap();
+        assert_eq!(interact.index, 0);
+        interact.update(Action::Up).unwrap();
+        assert_eq!(interact.index, 0);
+        interact.update(Action::Tick).unwrap();
+        assert!(interact.get().is_none());
+        assert_eq!(interact.index, 0);
+    }
+
+    #[test]
+    fn update() {
+        let (tx, rx) = unbounded_channel::<Vec<usize>>();
+        let mut interact = Interactive::<usize> {
+            elems_rx: rx.into(),
+            ..Default::default()
+        };
+
+        tx.send(vec![1, 2, 3]).unwrap();
+        interact.update(Action::Tick).unwrap();
+        assert_eq!(
+            interact.get().unwrap().clone(),
+            vec![1usize, 2usize, 3usize]
+        );
+        tx.send(vec![4, 5, 6]).unwrap();
+        interact.update(Action::Tick).unwrap();
+        assert_eq!(
+            interact.get().unwrap().clone(),
+            vec![4usize, 5usize, 6usize]
+        );
+        tx.send(vec![7, 8, 9]).unwrap();
+        interact.update(Action::Tick).unwrap();
+        assert_eq!(
+            interact.get().unwrap().clone(),
+            vec![7usize, 8usize, 9usize]
+        );
+
+        interact.update(Action::Down).unwrap();
+        assert_eq!(interact.index, 1);
+        interact.update(Action::Down).unwrap();
+        assert_eq!(interact.index, 2);
+        interact.update(Action::Down).unwrap();
+        assert_eq!(interact.index, 2);
+        interact.update(Action::Up).unwrap();
+        interact.update(Action::Up).unwrap();
+        assert_eq!(interact.index, 0);
+        interact.update(Action::Up).unwrap();
+        assert_eq!(interact.index, 0);
+    }
+}
