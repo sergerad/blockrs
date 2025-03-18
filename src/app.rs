@@ -38,13 +38,14 @@ pub enum Setting {
 }
 
 impl<P: ChainProvider + Send + Sync + 'static> App<P> {
-    pub fn new(tick_rate: f64, frame_rate: f64, provider: P) -> Result<Self> {
+    pub fn new(tick_rate: f64, frame_rate: f64, provider: P, config: Config) -> Result<Self> {
         let mut monitor = ChainMonitor::new(provider);
         let (block_rx, transaction_rx, account_rx) = monitor.receivers();
         let (action_tx, action_rx) = mpsc::unbounded_channel();
         Ok(Self {
             tick_rate,
             frame_rate,
+            config,
             components: vec![
                 Box::new(Head::new(block_rx)),
                 Box::new(AccList::new(account_rx)),
@@ -52,7 +53,6 @@ impl<P: ChainProvider + Send + Sync + 'static> App<P> {
             ],
             should_quit: false,
             should_suspend: false,
-            config: Config::new()?,
             setting: Setting::Default,
             last_tick_key_events: Vec::new(),
             action_tx,

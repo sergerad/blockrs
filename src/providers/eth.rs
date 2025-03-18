@@ -1,15 +1,30 @@
-use crate::config::Config;
 use crate::providers::{Account, Block, ChainProvider, Transaction};
 use alloy::consensus::Transaction as AlloyTransaction;
 use alloy::eips::BlockId;
+use alloy::hex::FromHexError;
 use alloy::primitives::utils::format_units;
-use alloy::primitives::Address as AlloyAddress;
+use alloy::primitives::{Address as AlloyAddress, Uint};
 use alloy::providers::{DynProvider, Provider, ProviderBuilder};
 use alloy::rpc::types::Block as AlloyBlock;
 use alloy::transports::{RpcError, TransportErrorKind};
 use config::ConfigError;
 use std::str::FromStr;
 use url::Url;
+
+#[derive(thiserror::Error, Debug)]
+pub enum EthProviderError {
+    #[error("invalid content in configuration file")]
+    Config(#[from] ConfigError),
+
+    #[error("invalid eth address specified")]
+    InvalidAddress(#[from] FromHexError),
+
+    #[error(transparent)]
+    Transport(#[from] RpcError<TransportErrorKind>),
+
+    #[error("head block could not be found")]
+    NoHead,
+}
 
 #[derive(Debug, Clone)]
 pub struct EthProvider {
@@ -19,14 +34,11 @@ pub struct EthProvider {
 }
 
 impl EthProvider {
-    pub fn new(url: Url) -> Result<Self, ConfigError> {
-        let config = Config::new()?;
-        let addrs: Vec<_> = config
-            .app
-            .addresses
+    pub fn new(url: Url, addrs: &[String]) -> Result<Self, EthProviderError> {
+        let addrs = addrs
             .iter()
-            .map(|addr| AlloyAddress::from_str(addr.as_str()).unwrap())
-            .collect();
+            .map(|a| AlloyAddress::from_str(a.as_str()))
+            .collect::<Result<Vec<_>, _>>()?;
         let provider = ProviderBuilder::new().on_http(url);
         let provider = DynProvider::new(provider);
         Ok(Self {
@@ -35,15 +47,6 @@ impl EthProvider {
             head: None,
         })
     }
-}
-
-#[derive(thiserror::Error, Debug)]
-pub enum EthProviderError {
-    #[error(transparent)]
-    Transport(#[from] RpcError<TransportErrorKind>),
-
-    #[error("Head block could not be found")]
-    NoHead,
 }
 
 impl From<&AlloyBlock> for Block {
@@ -73,11 +76,11 @@ impl ChainProvider for EthProvider {
             let txs: Vec<_> = block
                 .transactions
                 .as_transactions()
-                .unwrap()
-                .iter()
+                .into_iter()
+                .flatten()
                 .map(|tx| Transaction {
                     units: "gwei".to_string(),
-                    value: format_units(tx.inner.value(), "gwei").unwrap(),
+                    value: gwei(tx.inner.value()),
                     hash: tx.inner.tx_hash().to_string(),
                     from: tx.inner.signer().to_string(),
                     to: tx
@@ -102,13 +105,50 @@ impl ChainProvider for EthProvider {
         let mut accounts = Vec::new();
         for addr in &self.addrs {
             let bal = self.provider.get_balance(*addr).block_id(block).await?;
-            let gwei = format_units(bal, "gwei").unwrap();
             accounts.push(Account {
-                balance: gwei,
+                balance: gwei(bal),
                 address: addr.to_string(),
                 units: "gwei".to_string(),
             });
         }
         Ok(accounts)
+    }
+}
+
+fn gwei(num: Uint<256, 4>) -> String {
+    format_units(num, "gwei").expect("gwei is valid unit format")
+}
+
+#[cfg(test)]
+mod tests {
+    use url::Url;
+
+    use crate::providers::eth::EthProviderError;
+
+    use super::EthProvider;
+    #[test]
+    fn instantiate() {
+        let u = Url::parse("http://localhost:8545").unwrap();
+        let addrs = vec![];
+        let _p = EthProvider::new(u, &addrs).unwrap();
+    }
+
+    #[test]
+    fn instantiate_addrs() {
+        let u = Url::parse("http://localhost:8545").unwrap();
+        let addrs = vec![
+            "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045".to_string(),
+            "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045".to_string(),
+            "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045".to_string(),
+        ];
+        let _p = EthProvider::new(u, &addrs).unwrap();
+    }
+
+    #[test]
+    fn instantiate_invalid_addrs() {
+        let u = Url::parse("http://localhost:8545").unwrap();
+        let addrs = vec!["0x999d8dA6BF26964aF9D7eEd9e03E53415D37aA96045".to_string()];
+        let e = EthProvider::new(u, &addrs);
+        assert!(matches!(e, Err(EthProviderError::InvalidAddress(_))));
     }
 }
