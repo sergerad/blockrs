@@ -53,6 +53,8 @@ impl Component for TxList {
                     .map(|tx| {
                         Row::new(vec![
                             tx.hash.clone(),
+                            tx.kind.clone(),
+                            tx.nonce.clone(),
                             tx.from.abridged(),
                             tx.to.abridged(),
                             tx.value.clone(),
@@ -74,17 +76,26 @@ impl Component for TxList {
 
         // Construct the accounts table.
         let widths = [
-            Constraint::Percentage(40), // Hash.
-            Constraint::Percentage(20), // From.
-            Constraint::Percentage(20), // To.
-            Constraint::Percentage(10), // Value.
+            Constraint::Fill(7), // Hash.
+            Constraint::Fill(1), // Kind.
+            Constraint::Fill(1), // Nonce.
+            Constraint::Fill(2), // From.
+            Constraint::Fill(2), // To.
+            Constraint::Fill(3), // Value.
         ];
         let table = Table::new(rows, widths)
             .column_spacing(2)
             .style(Style::new().blue())
             .header(
-                Row::new(vec!["HASH", "FROM", "TO", value_col_name.as_str()])
-                    .style(Style::new().bold().italic()),
+                Row::new(vec![
+                    "HASH",
+                    "KIND",
+                    "NONCE",
+                    "FROM",
+                    "TO",
+                    value_col_name.as_str(),
+                ])
+                .style(Style::new().bold().italic()),
             )
             .block(
                 ratatui::widgets::Block::bordered()

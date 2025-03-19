@@ -25,6 +25,8 @@ pub struct Transaction {
     pub to: String,
     pub value: String,
     pub units: String,
+    pub kind: String,
+    pub nonce: String,
 }
 
 /// Contains the chain-agnostic data required to represent an account block in the UI.

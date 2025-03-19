@@ -91,6 +91,8 @@ impl ChainProvider for EthProvider {
                 .into_iter()
                 .flatten()
                 .map(|tx| Transaction {
+                    nonce: tx.inner.nonce().to_string(),
+                    kind: tx.inner.tx_type().to_string(),
                     units: "gwei".to_string(),
                     value: gwei(tx.inner.value()),
                     hash: tx.inner.tx_hash().to_string(),
