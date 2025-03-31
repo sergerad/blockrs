@@ -5019,7 +5019,6 @@ dependencies = [
  "nu-ansi-term",
  "once_cell",
  "regex",
- "serde",
  "sharded-slab",
  "smallvec",
  "thread_local",

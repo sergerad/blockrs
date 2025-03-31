@@ -20,12 +20,12 @@ better-panic = "0.3.0"
 duration-str = "0.16"
 chrono = "0.4"
 clap = { version = "4.5.20", features = [
-  "derive",
-  "cargo",
-  "wrap_help",
-  "unicode",
-  "string",
-  "unstable-styles",
+    "derive",
+    "cargo",
+    "wrap_help",
+    "unicode",
+    "string",
+    "unstable-styles",
 ] }
 color-eyre = "0.6.3"
 config = "0.14.0"
@@ -48,7 +48,7 @@ tokio = { version = "1.40.0", features = ["full"] }
 tokio-util = "0.7.12"
 tracing = "0.1.40"
 tracing-error = "0.2.0"
-tracing-subscriber = { version = "0.3.18", features = ["env-filter", "serde"] }
+tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 alloy = { version = "0.12" }
 url = "2.5"
 thiserror = "2.0"
