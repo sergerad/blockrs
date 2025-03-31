@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4.0
+
+### Features
+
+- Add `Error` component to display error messages coming out of the chain monitor.
+
 ## v0.3.0
 
 ### Features
