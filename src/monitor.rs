@@ -3,7 +3,6 @@ use crate::types::{
     AccountReceiver, AccountSender, BlockReceiver, BlockSender, TransactionReceiver,
     TransactionSender,
 };
-use color_eyre::eyre;
 use tokio::sync::mpsc::unbounded_channel;
 
 /// Runtime responsible for managing retrieval of latest chain data.
@@ -53,7 +52,7 @@ impl<P> ChainMonitor<P> {
 
 impl<P: ChainProvider + Sync> ChainMonitor<P> {
     /// Uses a [`ChainProvider`] to get the latest block, transactions, and account balances.
-    pub async fn run(&mut self) -> eyre::Result<()> {
+    pub async fn run(&mut self) -> color_eyre::Result<()> {
         // Retrieve the latest block.
         let block = self.provider.head().await?;
         // Do not send duplicate blocks.

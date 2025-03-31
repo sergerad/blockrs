@@ -1,16 +1,21 @@
+use std::time::Duration;
+
 use color_eyre::Result;
 use crossterm::event::KeyEvent;
 use ratatui::{
-    layout::{Constraint, Direction, Layout},
+    layout::{Constraint, Direction, Flex, Layout},
     prelude::Rect,
 };
 use serde::{Deserialize, Serialize};
-use tokio::{sync::mpsc, time::interval};
+use tokio::{
+    sync::mpsc,
+    time::{interval, Instant},
+};
 use tracing::{debug, info};
 
 use crate::{
     action::Action,
-    components::{acclist::AccList, head::Head, txlist::TxList, Component},
+    components::{acclist::AccList, error::Error, head::Head, txlist::TxList, Component},
     config::Config,
     monitor::ChainMonitor,
     providers::ChainProvider,
@@ -29,6 +34,7 @@ pub struct App<P> {
     action_tx: mpsc::UnboundedSender<Action>,
     action_rx: mpsc::UnboundedReceiver<Action>,
     monitor: Option<ChainMonitor<P>>,
+    error_timestamp: Instant,
 }
 
 #[derive(Default, Debug, Copy, Clone, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -58,6 +64,7 @@ impl<P: ChainProvider + Send + Sync + 'static> App<P> {
             action_tx,
             action_rx,
             monitor: monitor.into(),
+            error_timestamp: Instant::now(),
         })
     }
 
@@ -166,6 +173,12 @@ impl<P: ChainProvider + Send + Sync + 'static> App<P> {
             match action {
                 Action::Tick => {
                     self.last_tick_key_events.drain(..);
+                    if self.is_error()
+                        && Instant::now().duration_since(self.error_timestamp)
+                            > Duration::from_secs(4)
+                    {
+                        self.components.pop();
+                    }
                 }
                 Action::Quit => self.should_quit = true,
                 Action::Suspend => self.should_suspend = true,
@@ -173,7 +186,14 @@ impl<P: ChainProvider + Send + Sync + 'static> App<P> {
                 Action::ClearScreen => tui.terminal.clear()?,
                 Action::Resize(w, h) => self.handle_resize(tui, w, h)?,
                 Action::Render => self.render(tui)?,
-                //Action::Error(_err) => {}
+                Action::Error(ref err) => {
+                    self.error_timestamp = Instant::now();
+                    if self.is_error() {
+                        self.components[3] = Box::new(Error::new(err.to_string()));
+                    } else {
+                        self.components.push(Box::new(Error::new(err.to_string())));
+                    }
+                }
                 _ => {}
             }
             for component in self.components.iter_mut() {
@@ -203,7 +223,10 @@ impl<P: ChainProvider + Send + Sync + 'static> App<P> {
                 .constraints(vec![Constraint::Percentage(60), Constraint::Percentage(40)])
                 .split(outer_layout[0]);
 
-            let areas = [inner_layout[0], inner_layout[1], outer_layout[1]];
+            let mut areas = vec![inner_layout[0], inner_layout[1], outer_layout[1]];
+            if self.is_error() {
+                areas.push(Self::popup_area(frame.area(), 50, 30));
+            }
             for (i, component) in self.components.iter_mut().enumerate() {
                 if let Err(err) = component.draw(frame, areas[i]) {
                     let _ = self
@@ -213,5 +236,19 @@ impl<P: ChainProvider + Send + Sync + 'static> App<P> {
             }
         })?;
         Ok(())
+    }
+
+    /// Returns true if the app is in an error state.
+    fn is_error(&self) -> bool {
+        self.components.len() == 4
+    }
+
+    /// Returns a centered rect using up certain percentage of the available rect `r`.
+    fn popup_area(area: Rect, percent_x: u16, percent_y: u16) -> Rect {
+        let vertical = Layout::vertical([Constraint::Percentage(percent_y)]).flex(Flex::Center);
+        let horizontal = Layout::horizontal([Constraint::Percentage(percent_x)]).flex(Flex::Center);
+        let [area] = vertical.areas(area);
+        let [area] = horizontal.areas(area);
+        area
     }
 }

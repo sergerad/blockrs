@@ -20,12 +20,12 @@ better-panic = "0.3.0"
 duration-str = "0.16"
 chrono = "0.4"
 clap = { version = "4.5.20", features = [
-    "derive",
-    "cargo",
-    "wrap_help",
-    "unicode",
-    "string",
-    "unstable-styles",
+  "derive",
+  "cargo",
+  "wrap_help",
+  "unicode",
+  "string",
+  "unstable-styles",
 ] }
 color-eyre = "0.6.3"
 config = "0.14.0"
