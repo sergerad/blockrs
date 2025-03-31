@@ -8,7 +8,7 @@ use crate::types::{Account, Block, Transaction};
 /// information to the UI of the app.
 #[async_trait::async_trait]
 pub trait ChainProvider {
-    type Error: std::fmt::Debug;
+    type Error: std::error::Error + Send + Sync + 'static;
 
     /// Retrieve the latest head of the blockchain.
     ///

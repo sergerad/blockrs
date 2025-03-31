@@ -3,8 +3,8 @@ use crate::types::{
     AccountReceiver, AccountSender, BlockReceiver, BlockSender, TransactionReceiver,
     TransactionSender,
 };
-use std::time::Duration;
-use tokio::{sync::mpsc::unbounded_channel, time::interval};
+use color_eyre::eyre;
+use tokio::sync::mpsc::unbounded_channel;
 
 /// Runtime responsible for managing retrieval of latest chain data.
 pub struct ChainMonitor<P> {
@@ -15,6 +15,7 @@ pub struct ChainMonitor<P> {
     transaction_rx: Option<TransactionReceiver>,
     account_rx: Option<AccountReceiver>,
     provider: P,
+    head_number: u64,
 }
 
 impl<P> ChainMonitor<P> {
@@ -31,6 +32,7 @@ impl<P> ChainMonitor<P> {
             block_rx: block_rx.into(),
             transaction_rx: transaction_rx.into(),
             account_rx: account_rx.into(),
+            head_number: 0u64,
         }
     }
 
@@ -50,27 +52,22 @@ impl<P> ChainMonitor<P> {
 }
 
 impl<P: ChainProvider + Sync> ChainMonitor<P> {
-    /// The main loop of the `ChainMonitor`.
-    pub async fn run(&mut self, tick_rate: Duration) {
-        let mut tick_interval = interval(tick_rate);
-        let mut head_number = 0u64;
-        loop {
-            tick_interval.tick().await;
-
-            // Retrieve the latest block.
-            let block = self.provider.head().await.unwrap();
-            // Do not send duplicate blocks.
-            if block.number > head_number {
-                head_number = block.number;
-                // Send the block.
-                self.block_tx.send(vec![block]).unwrap();
-                // Get and send the transactions.
-                let txs = self.provider.transactions().await.unwrap();
-                self.transaction_tx.send(txs).unwrap();
-                // Get and send the account balances.
-                let bals = self.provider.balances().await.unwrap();
-                self.account_tx.send(bals).unwrap();
-            }
+    /// Uses a [`ChainProvider`] to get the latest block, transactions, and account balances.
+    pub async fn run(&mut self) -> eyre::Result<()> {
+        // Retrieve the latest block.
+        let block = self.provider.head().await?;
+        // Do not send duplicate blocks.
+        if block.number > self.head_number {
+            self.head_number = block.number;
+            // Send the block.
+            self.block_tx.send(vec![block])?;
+            // Get and send the transactions.
+            let txs = self.provider.transactions().await?;
+            self.transaction_tx.send(txs)?;
+            // Get and send the account balances.
+            let bals = self.provider.balances().await?;
+            self.account_tx.send(bals)?;
         }
+        Ok(())
     }
 }

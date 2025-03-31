@@ -5,7 +5,7 @@ use ratatui::{
     prelude::Rect,
 };
 use serde::{Deserialize, Serialize};
-use tokio::sync::mpsc;
+use tokio::{sync::mpsc, time::interval};
 use tracing::{debug, info};
 
 use crate::{
@@ -77,11 +77,20 @@ impl<P: ChainProvider + Send + Sync + 'static> App<P> {
             component.init(tui.size()?)?;
         }
 
-        // Run chain provider loop.
+        // Run chain monitor loop.
         let mut monitor = self.monitor.take().unwrap();
         let tick_rate = self.config.app.tick_rate;
+        let provider_action_tx = self.action_tx.clone();
         tokio::task::spawn(async move {
-            monitor.run(tick_rate).await;
+            let mut tick_interval = interval(tick_rate);
+            loop {
+                tick_interval.tick().await;
+                if let Err(e) = monitor.run().await {
+                    provider_action_tx
+                        .send(Action::Error(e.to_string()))
+                        .unwrap();
+                }
+            }
         });
 
         // Run main app loop.
@@ -164,6 +173,7 @@ impl<P: ChainProvider + Send + Sync + 'static> App<P> {
                 Action::ClearScreen => tui.terminal.clear()?,
                 Action::Resize(w, h) => self.handle_resize(tui, w, h)?,
                 Action::Render => self.render(tui)?,
+                //Action::Error(_err) => {}
                 _ => {}
             }
             for component in self.components.iter_mut() {
