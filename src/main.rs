@@ -1,8 +1,8 @@
 use clap::Parser;
-use cli::Cli;
+use cli::{Cli, RpcType};
 use color_eyre::Result;
 use config::Config;
-use providers::eth::EthProvider;
+use providers::{eth::EthProvider, miden::MidenProvider};
 
 use crate::app::App;
 
@@ -25,8 +25,18 @@ async fn main() -> Result<()> {
 
     let args = Cli::parse();
     let config = Config::new()?;
-    let provider = EthProvider::new(args.rpc_url, &config.app.addresses)?;
-    let mut app = App::new(args.tick_rate, args.frame_rate, provider, config)?;
-    app.run().await?;
+    match args.rpc_type {
+        RpcType::Eth => {
+            let provider = EthProvider::new(args.rpc_url, &config.app.addresses)?;
+            let mut app = App::new(args.tick_rate, args.frame_rate, provider, config)?;
+            app.run().await?;
+        }
+        RpcType::Miden => {
+            todo!();
+            //let provider = MidenProvider::new(args.rpc_url, &config.app.addresses).await?;
+            //let mut app = App::new(args.tick_rate, args.frame_rate, provider, config)?;
+            //app.run().await?;
+        }
+    };
     Ok(())
 }
