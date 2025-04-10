@@ -1,4 +1,5 @@
 pub mod eth;
+pub mod miden;
 
 use crate::types::{Account, Block, Transaction};
 
