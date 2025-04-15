@@ -1,20 +1,30 @@
-use clap::Parser;
+use clap::{Parser, ValueEnum};
 use url::Url;
 
 use crate::config::{get_config_dir, get_data_dir};
 
+/// All supported network RPC connections.
+#[derive(ValueEnum, Clone, Debug)]
+pub enum RpcType {
+    Eth,
+    Miden,
+}
+
 #[derive(Parser, Debug)]
 #[command(author, version = version(), about)]
 pub struct Cli {
-    /// Tick rate, i.e. number of ticks per second
+    /// Tick rate, i.e. number of ticks per second.
     #[arg(short, long, value_name = "FLOAT", default_value_t = 4.0)]
     pub tick_rate: f64,
 
-    /// Frame rate, i.e. number of frames per second
+    /// Frame rate, i.e. number of frames per second.
     #[arg(short, long, value_name = "FLOAT", default_value_t = 60.0)]
     pub frame_rate: f64,
 
-    /// ...
+    /// Type of RPC connection.
+    pub rpc_type: RpcType,
+
+    /// URL of the RPC server.
     pub rpc_url: Url,
 }
 
