@@ -59,7 +59,6 @@ impl From<&AlloyBlock> for Block {
     }
 }
 
-#[async_trait::async_trait]
 impl ChainProvider for EthProvider {
     type Error = EthProviderError;
 

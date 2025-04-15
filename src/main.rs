@@ -29,13 +29,12 @@ async fn main() -> Result<()> {
         RpcType::Eth => {
             let provider = EthProvider::new(args.rpc_url, &config.app.addresses)?;
             let mut app = App::new(args.tick_rate, args.frame_rate, provider, config)?;
-            app.run().await?;
+            app.run().await.unwrap();
         }
         RpcType::Miden => {
-            todo!();
-            //let provider = MidenProvider::new(args.rpc_url, &config.app.addresses).await?;
-            //let mut app = App::new(args.tick_rate, args.frame_rate, provider, config)?;
-            //app.run().await?;
+            let provider = MidenProvider::new(args.rpc_url, &config.app.addresses)?;
+            let mut app = App::new(args.tick_rate, args.frame_rate, provider, config)?;
+            app.run().await.unwrap();
         }
     };
     Ok(())

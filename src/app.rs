@@ -11,7 +11,7 @@ use tokio::{
     sync::mpsc,
     time::{interval, Instant},
 };
-use tracing::{debug, info};
+use tracing::{debug, error, info};
 
 use crate::{
     action::Action,

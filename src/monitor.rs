@@ -50,7 +50,7 @@ impl<P> ChainMonitor<P> {
     }
 }
 
-impl<P: ChainProvider + Sync> ChainMonitor<P> {
+impl<P: ChainProvider> ChainMonitor<P> {
     /// Uses a [`ChainProvider`] to get the latest block, transactions, and account balances.
     pub async fn run(&mut self) -> color_eyre::Result<()> {
         // Retrieve the latest block.
