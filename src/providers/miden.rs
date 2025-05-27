@@ -1,10 +1,4 @@
-use std::sync::Arc;
-
-use miden_client::{
-    builder::ClientBuilder,
-    note::BlockNumber,
-    rpc::{Endpoint, NodeRpcClient, TonicRpcClient},
-};
+use miden_client::rpc::{Endpoint, NodeRpcClient, TonicRpcClient};
 use url::Url;
 
 use crate::types::{Account, Block, Transaction};
@@ -28,7 +22,7 @@ pub struct MidenProvider {
 }
 
 impl MidenProvider {
-    pub async fn new(url: Url, addrs: &[String]) -> Result<Self, MidenProviderError> {
+    pub async fn new(url: Url, _addrs: &[String]) -> Result<Self, MidenProviderError> {
         let endpoint = Endpoint::new(
             url.scheme().into(),
             url.host().unwrap().to_string(),
@@ -39,25 +33,11 @@ impl MidenProvider {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::MidenProvider;
-    use url::Url;
-
-    #[tokio::test]
-    async fn instantiate() {
-        let u = Url::parse("http://localhost:57291").unwrap();
-        let addrs = vec![];
-        let _p = MidenProvider::new(u, &addrs).await.unwrap();
-    }
-}
-
-#[async_trait::async_trait]
 impl ChainProvider for MidenProvider {
     type Error = MidenProviderError;
 
     async fn head(&mut self) -> Result<Block, Self::Error> {
-        let block = self
+        let _block = self
             .client
             .get_block_by_number(0u32.into())
             .await
@@ -78,5 +58,18 @@ impl ChainProvider for MidenProvider {
     async fn balances(&self) -> Result<Vec<Account>, Self::Error> {
         // TODO: impl
         Ok(vec![])
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::MidenProvider;
+    use url::Url;
+
+    #[tokio::test]
+    async fn instantiate() {
+        let u = Url::parse("http://localhost:57291").unwrap();
+        let addrs = vec![];
+        let _p = MidenProvider::new(u, &addrs).await.unwrap();
     }
 }
