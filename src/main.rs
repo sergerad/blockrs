@@ -32,10 +32,9 @@ async fn main() -> Result<()> {
             app.run().await?;
         }
         RpcType::Miden => {
-            todo!();
-            //let provider = MidenProvider::new(args.rpc_url, &config.app.addresses).await?;
-            //let mut app = App::new(args.tick_rate, args.frame_rate, provider, config)?;
-            //app.run().await?;
+            let provider = MidenProvider::new(args.rpc_url, &config.app.addresses).await?;
+            let mut app = App::new(args.tick_rate, args.frame_rate, provider, config)?;
+            app.run().await?;
         }
     };
     Ok(())

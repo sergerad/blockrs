@@ -2,8 +2,8 @@ use std::sync::Arc;
 
 use miden_client::{
     builder::ClientBuilder,
-    rpc::{Endpoint, TonicRpcClient},
-    Client,
+    note::BlockNumber,
+    rpc::{Endpoint, NodeRpcClient, TonicRpcClient},
 };
 use url::Url;
 
@@ -24,7 +24,7 @@ pub enum MidenProviderError {
 }
 
 pub struct MidenProvider {
-    client: Client,
+    client: TonicRpcClient,
 }
 
 impl MidenProvider {
@@ -34,12 +34,7 @@ impl MidenProvider {
             url.host().unwrap().to_string(),
             url.port(),
         );
-        let tonic_client = TonicRpcClient::new(&endpoint, 10_000);
-        let tonic_client = Arc::new(tonic_client);
-        let builder = ClientBuilder::new()
-            .with_rpc(tonic_client)
-            .with_filesystem_keystore("/tmp/");
-        let client = builder.build().await?;
+        let client = TonicRpcClient::new(&endpoint, 10_000);
         Ok(Self { client })
     }
 }
@@ -62,12 +57,16 @@ impl ChainProvider for MidenProvider {
     type Error = MidenProviderError;
 
     async fn head(&mut self) -> Result<Block, Self::Error> {
-        let block = self.client.get_latest_epoch_block().await?;
-        let num = block.block_num();
+        let block = self
+            .client
+            .get_block_by_number(0u32.into())
+            .await
+            .expect("todo");
+        let number = 0; // TODO
         Ok(Block {
-            number: num.as_u64(),
-            timestamp: block.timestamp() as u64,
-            hash: block.chain_commitment().to_string(), // TODO: Proper hash?
+            number,
+            timestamp: 0u64,      // TODO
+            hash: "".to_string(), // TODO
         })
     }
 
