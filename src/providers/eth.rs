@@ -59,7 +59,6 @@ impl From<&AlloyBlock> for Block {
     }
 }
 
-#[async_trait::async_trait]
 impl ChainProvider for EthProvider {
     type Error = EthProviderError;
 
@@ -141,11 +140,9 @@ fn gwei(num: Uint<256, 4>) -> String {
 
 #[cfg(test)]
 mod tests {
+    use super::{EthProvider, EthProviderError};
     use url::Url;
 
-    use crate::providers::eth::EthProviderError;
-
-    use super::EthProvider;
     #[test]
     fn instantiate() {
         let u = Url::parse("http://localhost:8545").unwrap();

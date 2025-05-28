@@ -20,12 +20,12 @@ better-panic = "0.3.0"
 duration-str = "0.16"
 chrono = "0.4"
 clap = { version = "4.5.20", features = [
-  "derive",
-  "cargo",
-  "wrap_help",
-  "unicode",
-  "string",
-  "unstable-styles",
+    "derive",
+    "cargo",
+    "wrap_help",
+    "unicode",
+    "string",
+    "unstable-styles",
 ] }
 color-eyre = "0.6.3"
 config = "0.14.0"
@@ -52,7 +52,12 @@ tracing-subscriber = { version = "0.3.18", features = ["env-filter"] }
 alloy = { version = "0.12" }
 url = "2.5"
 thiserror = "2.0"
-async-trait = "0.1"
+miden-client = { path = "../miden-client/crates/rust-client", features = [
+    "concurrent",
+    "sqlite",
+    "tonic",
+] }
+miden-objects = { version = "0.9", default-features = false }
 
 [build-dependencies]
 anyhow = "1.0.90"
