@@ -57,6 +57,7 @@ miden-client = { path = "../miden-client/crates/rust-client", features = [
     "sqlite",
     "tonic",
 ] }
+miden-objects = { version = "0.9", default-features = false }
 
 [build-dependencies]
 anyhow = "1.0.90"

@@ -35,6 +35,11 @@ export BLOCKRS_CONFIG=/tmp/
 blockrs eth https://rpc.flashbots.net
 ```
 
+And, similarly, for Miden RPC:
+```
+blockrs miden https://rpc.testnet.miden.io
+```
+
 ### User Input
 
 The app will run in a mode which follows the HEAD of the chain by default.

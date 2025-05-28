@@ -1,4 +1,5 @@
-use miden_client::rpc::{Endpoint, NodeRpcClient, TonicRpcClient};
+use miden_client::rpc::{Endpoint, NodeRpcClient, RpcError, TonicRpcClient};
+use miden_objects::block::ProvenBlock;
 use url::Url;
 
 use crate::types::{Account, Block, Transaction};
@@ -15,10 +16,14 @@ pub enum MidenProviderError {
 
     #[error("...")]
     Client(#[from] miden_client::ClientError),
+
+    #[error("...")]
+    Rpc(#[from] RpcError),
 }
 
 pub struct MidenProvider {
     client: TonicRpcClient,
+    head: Option<ProvenBlock>,
 }
 
 impl MidenProvider {
@@ -29,7 +34,7 @@ impl MidenProvider {
             url.port(),
         );
         let client = TonicRpcClient::new(&endpoint, 10_000);
-        Ok(Self { client })
+        Ok(Self { client, head: None })
     }
 }
 
@@ -37,21 +42,28 @@ impl ChainProvider for MidenProvider {
     type Error = MidenProviderError;
 
     async fn head(&mut self) -> Result<Block, Self::Error> {
-        let _block = self
+        // Retrieve latest block header info.
+        let (block, _) = self.client.get_block_header_by_number(None, false).await?;
+        let number = block.block_num().as_u64();
+        let timestamp = block.timestamp() as u64;
+        let hash = block.chain_commitment().to_string();
+
+        // Retrieve the latest block and store it in the provider.
+        let block = self
             .client
-            .get_block_by_number(0u32.into())
-            .await
-            .expect("todo");
-        let number = 0; // TODO
+            .get_block_by_number((number as u32).into())
+            .await?;
+        self.head = block;
+
+        // Return the block header info.
         Ok(Block {
             number,
-            timestamp: 0u64,      // TODO
-            hash: "".to_string(), // TODO
+            timestamp,
+            hash,
         })
     }
 
     async fn transactions(&self) -> Result<Vec<Transaction>, Self::Error> {
-        // TODO: impl
         Ok(vec![])
     }
 
